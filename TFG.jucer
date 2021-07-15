@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="SUc6Lm" name="TFG" projectType="audioplug" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="1" displaySplashScreen="1" jucerFormatVersion="1"
+              companyName="Universidad Complutense de Madrid">
+  <MAINGROUP id="Tvh79u" name="TFG">
+    <GROUP id="{63D8C37B-A676-E4C4-C0A6-68BC2745AAC5}" name="Source">
+      <FILE id="SofX33" name="LookAndFeelCustomTwoValueSlider.cpp" compile="1"
+            resource="0" file="Source/LookAndFeelCustomTwoValueSlider.cpp"/>
+      <FILE id="HQmH0C" name="LookAndFeelCustomTwoValueSlider.h" compile="0"
+            resource="0" file="Source/LookAndFeelCustomTwoValueSlider.h"/>
+      <FILE id="e1PQWj" name="CustomTwoValueSlider.cpp" compile="1" resource="0"
+            file="Source/CustomTwoValueSlider.cpp"/>
+      <FILE id="bYijId" name="CustomTwoValueSlider.h" compile="0" resource="0"
+            file="Source/CustomTwoValueSlider.h"/>
+      <FILE id="Tg0cRd" name="LookAndFeelCustomRotarySlider.cpp" compile="1"
+            resource="0" file="Source/LookAndFeelCustomRotarySlider.cpp"/>
+      <FILE id="TdHzHE" name="LookAndFeelCustomRotarySlider.h" compile="0"
+            resource="0" file="Source/LookAndFeelCustomRotarySlider.h"/>
+      <FILE id="de0911" name="CustomRotarySlider.cpp" compile="1" resource="0"
+            file="Source/CustomRotarySlider.cpp"/>
+      <FILE id="xtp4Lx" name="CustomRotarySlider.h" compile="0" resource="0"
+            file="Source/CustomRotarySlider.h"/>
+      <FILE id="GBwqpN" name="PluginProcessor.cpp" compile="1" resource="0"
+            file="Source/PluginProcessor.cpp"/>
+      <FILE id="AeVEWe" name="PluginProcessor.h" compile="0" resource="0"
+            file="Source/PluginProcessor.h"/>
+      <FILE id="Wt1k2e" name="PluginEditor.cpp" compile="1" resource="0"
+            file="Source/PluginEditor.cpp"/>
+      <FILE id="hxiNbL" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
+  <EXPORTFORMATS>
+    <XCODE_MAC targetFolder="Builds/MacOSX">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="TFG"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="TFG"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../Desktop/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../Desktop/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../Desktop/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../../Desktop/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../Desktop/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../Desktop/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../Desktop/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../Desktop/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../Desktop/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../Desktop/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../Desktop/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../Desktop/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../Desktop/JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
+  </EXPORTFORMATS>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+  <LIVE_SETTINGS>
+    <OSX/>
+  </LIVE_SETTINGS>
+</JUCERPROJECT>
