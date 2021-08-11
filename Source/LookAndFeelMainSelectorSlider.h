@@ -1,8 +1,8 @@
 /*
   ==============================================================================
 
-    LookAndFeelCustomRotarySlider.h
-    Created: 12 Jul 2021 9:28:27am
+    LookAndFeelMainSelectorSlider.h
+    Created: 31 Jul 2021 1:58:45pm
     Author:  Héctor Ullate Catalán
 
   ==============================================================================
@@ -12,7 +12,7 @@
 #include <JuceHeader.h>
 
 
-class LookAndFeelCustomRotarySlider : public LookAndFeel_V4 {
+class LookAndFeelMainSelectorSlider : public LookAndFeel_V4 {
 
 public:
     void drawRotarySlider(Graphics&, int x, int y, int width, int height, float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle, Slider&) override;

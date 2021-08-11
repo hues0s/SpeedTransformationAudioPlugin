@@ -13,14 +13,15 @@
 
 //==============================================================================
 CustomTwoValueSlider::CustomTwoValueSlider() {
-    setSliderStyle (Slider::TwoValueHorizontal);
+    setSliderStyle (Slider::TwoValueVertical);
     setTextBoxStyle (Slider::NoTextBox, true, 0, 0);
     setLookAndFeel (&customLookAndFeel);
 }
 
 CustomTwoValueSlider::~CustomTwoValueSlider() { }
 
-void CustomTwoValueSlider::init(double minRange, double maxRange, double intervalRange) {
+void CustomTwoValueSlider::init(double minRange, double maxRange, double intervalRange, String title) {
     setRange(minRange, maxRange, intervalRange);
     setMinAndMaxValues(minRange, maxRange);
+    setName(title.toUpperCase());
 }

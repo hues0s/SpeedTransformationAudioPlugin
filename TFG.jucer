@@ -5,22 +5,61 @@
               companyName="Universidad Complutense de Madrid">
   <MAINGROUP id="Tvh79u" name="TFG">
     <GROUP id="{63D8C37B-A676-E4C4-C0A6-68BC2745AAC5}" name="Source">
-      <FILE id="SofX33" name="LookAndFeelCustomTwoValueSlider.cpp" compile="1"
-            resource="0" file="Source/LookAndFeelCustomTwoValueSlider.cpp"/>
-      <FILE id="HQmH0C" name="LookAndFeelCustomTwoValueSlider.h" compile="0"
-            resource="0" file="Source/LookAndFeelCustomTwoValueSlider.h"/>
-      <FILE id="e1PQWj" name="CustomTwoValueSlider.cpp" compile="1" resource="0"
-            file="Source/CustomTwoValueSlider.cpp"/>
-      <FILE id="bYijId" name="CustomTwoValueSlider.h" compile="0" resource="0"
-            file="Source/CustomTwoValueSlider.h"/>
-      <FILE id="Tg0cRd" name="LookAndFeelCustomRotarySlider.cpp" compile="1"
-            resource="0" file="Source/LookAndFeelCustomRotarySlider.cpp"/>
-      <FILE id="TdHzHE" name="LookAndFeelCustomRotarySlider.h" compile="0"
-            resource="0" file="Source/LookAndFeelCustomRotarySlider.h"/>
-      <FILE id="de0911" name="CustomRotarySlider.cpp" compile="1" resource="0"
-            file="Source/CustomRotarySlider.cpp"/>
-      <FILE id="xtp4Lx" name="CustomRotarySlider.h" compile="0" resource="0"
-            file="Source/CustomRotarySlider.h"/>
+      <GROUP id="{B98AF577-0F78-6E4F-D140-CD1AA5363C6A}" name="Values">
+        <GROUP id="{3C75EE6E-B135-57BA-E998-83A43ECA04EE}" name="Images">
+          <FILE id="sjQDJ9" name="mainIcon.png" compile="0" resource="1" file="Source/mainIcon.png"/>
+          <FILE id="E7BVmz" name="ucmIcon.png" compile="0" resource="1" file="Source/ucmIcon.png"/>
+        </GROUP>
+        <GROUP id="{1F252BEA-1979-D323-867D-3F2A59763B71}" name="Fonts">
+          <FILE id="skCp1v" name="BebasNeue-Regular.ttf" compile="0" resource="1"
+                file="Source/BebasNeue-Regular.ttf"/>
+          <FILE id="U5eoTg" name="CORPOREA.TTF" compile="0" resource="1" file="Source/CORPOREA.TTF"/>
+          <FILE id="ulrXHb" name="Matrouh.otf" compile="0" resource="1" file="Source/Matrouh.otf"/>
+          <FILE id="R5i51L" name="TambaSans-Bold.otf" compile="0" resource="1"
+                file="Source/TambaSans-Bold.otf"/>
+        </GROUP>
+        <FILE id="WEXydO" name="ProjectColours.cpp" compile="1" resource="0"
+              file="Source/ProjectColours.cpp"/>
+        <FILE id="JUyFvi" name="ProjectColours.h" compile="0" resource="0"
+              file="Source/ProjectColours.h"/>
+        <FILE id="dvmqJc" name="ProjectFonts.cpp" compile="1" resource="0"
+              file="Source/ProjectFonts.cpp"/>
+        <FILE id="ceJZIR" name="ProjectFonts.h" compile="0" resource="0" file="Source/ProjectFonts.h"/>
+      </GROUP>
+      <GROUP id="{3EC8638F-B452-5027-E639-157352336948}" name="CustomComponents">
+        <FILE id="LcNkLX" name="MainSelectorSlider.cpp" compile="1" resource="0"
+              file="Source/MainSelectorSlider.cpp"/>
+        <FILE id="kpjLyL" name="MainSelectorSlider.h" compile="0" resource="0"
+              file="Source/MainSelectorSlider.h"/>
+        <FILE id="mknW9H" name="TwoValueSliderAttachment.h" compile="1" resource="0"
+              file="Source/TwoValueSliderAttachment.h"/>
+        <FILE id="e1PQWj" name="CustomTwoValueSlider.cpp" compile="1" resource="0"
+              file="Source/CustomTwoValueSlider.cpp"/>
+        <FILE id="bYijId" name="CustomTwoValueSlider.h" compile="0" resource="0"
+              file="Source/CustomTwoValueSlider.h"/>
+        <FILE id="de0911" name="CustomRotarySlider.cpp" compile="1" resource="0"
+              file="Source/CustomRotarySlider.cpp"/>
+        <FILE id="xtp4Lx" name="CustomRotarySlider.h" compile="0" resource="0"
+              file="Source/CustomRotarySlider.h"/>
+      </GROUP>
+      <GROUP id="{CD451C2C-F3A4-DEE7-6E37-CC530C167DDA}" name="LookAndFeel">
+        <FILE id="K7JKtS" name="LookAndFeelMainSelectorSlider.cpp" compile="1"
+              resource="0" file="Source/LookAndFeelMainSelectorSlider.cpp"/>
+        <FILE id="Jfx2yJ" name="LookAndFeelMainSelectorSlider.h" compile="0"
+              resource="0" file="Source/LookAndFeelMainSelectorSlider.h"/>
+        <FILE id="Qrw6g3" name="LookAndFeelPowerButton.cpp" compile="1" resource="0"
+              file="Source/LookAndFeelPowerButton.cpp"/>
+        <FILE id="JNhaV8" name="LookAndFeelPowerButton.h" compile="0" resource="0"
+              file="Source/LookAndFeelPowerButton.h"/>
+        <FILE id="SofX33" name="LookAndFeelCustomTwoValueSlider.cpp" compile="1"
+              resource="0" file="Source/LookAndFeelCustomTwoValueSlider.cpp"/>
+        <FILE id="HQmH0C" name="LookAndFeelCustomTwoValueSlider.h" compile="0"
+              resource="0" file="Source/LookAndFeelCustomTwoValueSlider.h"/>
+        <FILE id="Tg0cRd" name="LookAndFeelCustomRotarySlider.cpp" compile="1"
+              resource="0" file="Source/LookAndFeelCustomRotarySlider.cpp"/>
+        <FILE id="TdHzHE" name="LookAndFeelCustomRotarySlider.h" compile="0"
+              resource="0" file="Source/LookAndFeelCustomRotarySlider.h"/>
+      </GROUP>
       <FILE id="GBwqpN" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="AeVEWe" name="PluginProcessor.h" compile="0" resource="0"

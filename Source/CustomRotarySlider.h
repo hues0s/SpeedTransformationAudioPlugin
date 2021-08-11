@@ -22,7 +22,7 @@ public:
     void mouseDrag(const MouseEvent& event) override;
     void mouseUp(const MouseEvent& event) override;
     
-    void init(double minRange, double maxRange, double intervalRange, String title);
+    void init(double minRange, double maxRange, double intervalRange, String title, String extraText);
     
 private:
     LookAndFeelCustomRotarySlider customLookAndFeel;

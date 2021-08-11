@@ -10,6 +10,7 @@
 #pragma once
 #include <JuceHeader.h>
 
+
 class TFGAudioProcessor : public AudioProcessor {
 
 public:
@@ -46,23 +47,12 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
     //==============================================================================
+    double selectedTimeDivision = { 1 };
     float currentDecibels { 0.0 };
-    bool hasToProcessBlock { true };
-
-    int currentBlock { 1 };
-    float effectFactor { 0.5 };   //Esta variable es la que controla cada cuanto tiempo se aplica el efecto.
-                                //Por defecto, lo dejamos en 1/2 compás.
-    
-    //Esta funcion se encargara de actualizar el valor del parametro que gestiona la duracion del efecto.
-    //Se llama desde el Plugin Editor al pulsar un boton
-    void barButtonChangeCallback(float newBarValue);
+    int currentDryWetMix { 100 };
     
     bool isPluginOn = true;
-    void pluginOnOffButtonCallback();
-    
-    int readBufferPosition { 0 };
-    int writeBufferPosition { 0 };
-    float * blockBufferArray { NULL };
+    void pluginOnOffButtonCallback(bool isPluginOn);
     
     static AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     AudioProcessorValueTreeState apvts { *this, nullptr, "Parameters", createParameterLayout() };
@@ -73,32 +63,52 @@ public:
     
     ChainSettings getChainSettings (AudioProcessorValueTreeState& apvts);
     
+    
+    void mainSelectorListener(double changedTimeDivision);
+    
 private:
     
     AudioPlayHead *playHead;
     AudioPlayHead::CurrentPositionInfo cpi;
-    
-    const double modError = 0.023;  //Este valor es utilizado como margen de error a la hora de apagar y encender
-                                    //el procesamiento del audio
-    
-    const int numProcessBlocks = 80;
-    
+    int currentNumSamples = 0;
     const double defaultQ = 0.71;
     
-    void initializeBlockBufferArray(int channelDataArraySize, int currentNumProcessBlocks);
-    void destroyBlockBufferArray();
-    void handleOutputGain(int totalNumInputChannels, AudioBuffer<float> & buffer);
+    void handleOutputGain(AudioBuffer<float> & buffer, int numChannels, int numSamples);
     void handleFilters(AudioBuffer<float> & buffer);
     
     dsp::ProcessorChain<dsp::IIR::Filter<float>, dsp::IIR::Filter<float>> leftChain, rightChain;
-    enum ChainPositions {
-        LowCut,
-        HighCut
-    };
-    void updateLowCutFilter (const ChainSettings& chainSettings);
-    void updateHighCutFilter (const ChainSettings& chainSettings);
+    enum ChainPositions { LowCut, HighCut };
+    void updateLowCutFilter(const ChainSettings& chainSettings);
+    void updateHighCutFilter(const ChainSettings& chainSettings);
     void updateFilters();
+    
+    void clearChannels(AudioBuffer<float>& buffer, int totalNumInputChannels, int totalNumOutputChannels, int numSamplesPerChannel);
+    
+    //Gestion principal del efecto
+    void halfspeed(AudioBuffer<float>& audioBuffer, std::vector<float>& writeBuffer, int numChannel, int numSamples, unsigned& writeBufferPosition, unsigned& readBufferPosition);
+    void resetHalfspeed();
+    void muteAudio(AudioBuffer<float> & buffer, int numChannels, int numSamples);
+    
+    double currentSampleRate; // == Samples per second
+    int amountOfNeededSamples = 0; //cantidad de samples necesarios para realizar el efecto; sera /2 de los samples del fragmento
+    
+    std::vector<float> buffer0;
+    std::vector<float> buffer1;
+    
+    //Punteros de posicion para el canal L
+    unsigned writeBufferPosition0 = 0;
+    unsigned readBufferPosition0 = 0;
+    //Punteros de posicion para el canal R
+    unsigned writeBufferPosition1 = 0;
+    unsigned readBufferPosition1 = 0;
+    
+    void calculateRemainingWaitingCycles();
+    int64 remainingWaitingCycles = 0;
+    
+    dsp::DryWetMixer<float> dryWetMixer;    //Esta clase facilita la mezcla de dos señales de audio
+                                            //La utilizamos para combinar las señales DRY y WET
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TFGAudioProcessor)
+    
 };

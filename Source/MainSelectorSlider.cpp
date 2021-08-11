@@ -1,40 +1,38 @@
 /*
   ==============================================================================
 
-    CustomRotarySlider.cpp
-    Created: 7 Jul 2021 5:08:38pm
+    MainSelectorSlider.cpp
+    Created: 31 Jul 2021 1:53:10pm
     Author:  Héctor Ullate Catalán
 
   ==============================================================================
 */
 
+#include "MainSelectorSlider.h"
 #include <JuceHeader.h>
-#include "CustomRotarySlider.h"
 #include "ProjectColours.h"
 
-CustomRotarySlider::CustomRotarySlider() {
+MainSelectorSlider::MainSelectorSlider() {
     setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
     setTextBoxStyle(juce::Slider::NoTextBox, true, 50, 20);
     setColour(Slider::rotarySliderFillColourId, ProjectColours::mainColour);
     setLookAndFeel(&customLookAndFeel);
-    setRotaryParameters(4.1f, 8.5f, true);
+    //setRotaryParameters(4.1f, 8.5f, true);
+    setRotaryParameters(5.3f, 10.42f - (10.4f - 5.28f)/9, true);
+
+    setRange(0, 8, 1);
+    setValue(5);
+    
 }
 
-CustomRotarySlider::~CustomRotarySlider() { }
+MainSelectorSlider::~MainSelectorSlider() { }
 
-void CustomRotarySlider::mouseDrag(const MouseEvent& event) {
+void MainSelectorSlider::mouseDrag(const MouseEvent& event) {
     Slider::mouseDrag(event);
     event.source.enableUnboundedMouseMovement(true);
 }
 
-void CustomRotarySlider::mouseUp(const MouseEvent& event) {
+void MainSelectorSlider::mouseUp(const MouseEvent& event) {
     Slider::mouseUp (event);
     Desktop::getInstance().getMainMouseSource().setScreenPosition (event.source.getLastMouseDownPosition());
-}
-
-void CustomRotarySlider::init(double minRange, double maxRange, double intervalRange, String title, String extraText) {
-    setRange(minRange, maxRange, intervalRange);
-    setValue(maxRange);
-    setName(title.toUpperCase());
-    setComponentID(extraText);
 }

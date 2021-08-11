@@ -18,7 +18,7 @@ public:
     CustomTwoValueSlider();
     ~CustomTwoValueSlider() override;
     
-    void init(double minRange, double MaxRange, double intervalRange);
+    void init(double minRange, double MaxRange, double intervalRange, String title);
 
 private:
     LookAndFeelCustomTwoValueSlider customLookAndFeel;

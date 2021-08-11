@@ -12,6 +12,9 @@
 #include "PluginProcessor.h"
 #include "CustomRotarySlider.h"
 #include "CustomTwoValueSlider.h"
+#include "TwoValueSliderAttachment.h"
+#include "LookAndFeelPowerButton.h"
+#include "MainSelectorSlider.h"
 
 
 class TFGAudioProcessorEditor : public AudioProcessorEditor,  public Slider::Listener {
@@ -32,33 +35,21 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TFGAudioProcessorEditor)
     
     //==============================================================================
-    Label bpmLabel;
     void setUpUI();
-    TextButton
-        button1_16 { "1/16" },
-        button1_8T { "1/8 T" },
-        button1_8 { "1/8" },
-        button1_4 { "1/4" },
-        button1_2 { "1/2" },
-        button1Bar { "1 Bar" },
-        button2Bars { "2 Bars" },
-        button4Bars { "4 Bars" },
-        button8Bars { "8 Bars" };
-    TextButton pluginOnOffButton { "On / Off" };
-    
-    void setUpBarButton(TextButton & button, int radioGroupId);
-    
-    const int barButtonWidth = 70;
-    const int barButtonHeight = 30;
-    const int barButtonYFactor = 100;
+    ToggleButton pluginOnOffButton;
         
     CustomRotarySlider gainSlider, mixSlider, smoothSlider;
+    MainSelectorSlider mainSelectorSlider;
     
     const int rotarySliderWidth = 80;
-    const int rotarySliderHeigth = 120;
-    const int filterSliderWidth = 30;
+    const int separatorTop = 55;
     
-    const int effectButtonHeigths[3] = { 90, 160, 230 };
-
     CustomTwoValueSlider filterSlider;
+    TwoValueSliderAttachment twoValueSliderAttachment;
+    
+    LookAndFeelPowerButton lookAndFeelPowerButton;
+    
+    const double timeDivisionArray[9] = { 0.0625, 1/8, 0.125, 0.25, 0.5, 1, 2, 4, 8 };
+    
+    
 };

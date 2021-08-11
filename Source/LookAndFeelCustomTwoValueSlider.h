@@ -15,6 +15,7 @@ class LookAndFeelCustomTwoValueSlider : public LookAndFeel_V4 {
 
 public:
     void drawLinearSlider (Graphics& g, int x, int y, int width, int height, float sliderPos, float minSliderPos, float maxSliderPos, const Slider::SliderStyle style, Slider& slider) override;
+    Slider::SliderLayout getSliderLayout(Slider& slider) override;
     
 private:
     Colour blue = Colour::fromFloatRGBA (0.42, 0.83, 1.0, 1.0);

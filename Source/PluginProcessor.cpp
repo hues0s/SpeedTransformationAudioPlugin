@@ -21,7 +21,12 @@ TFGAudioProcessor::TFGAudioProcessor()
                      #endif
                        )
 #endif
-{ }
+{
+    
+    dryWetMixer = dsp::DryWetMixer<float>(0);
+    dryWetMixer.setWetLatency(0);
+    dryWetMixer.setMixingRule(dsp::DryWetMixingRule::linear);
+}
 
 TFGAudioProcessor::~TFGAudioProcessor() { }
 
@@ -53,45 +58,17 @@ bool TFGAudioProcessor::isMidiEffect() const {
    #endif
 }
 
-double TFGAudioProcessor::getTailLengthSeconds() const {
-    return 0.0;
-}
+double TFGAudioProcessor::getTailLengthSeconds() const { return 0.0; }
 
-int TFGAudioProcessor::getNumPrograms() {
-    return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
-                // so this should be at least 1, even if you're not really implementing programs.
-}
+int TFGAudioProcessor::getNumPrograms() { return 1; }
 
-int TFGAudioProcessor::getCurrentProgram() {
-    return 0;
-}
+int TFGAudioProcessor::getCurrentProgram() { return 0; }
 
 void TFGAudioProcessor::setCurrentProgram (int index) { }
 
-const String TFGAudioProcessor::getProgramName (int index) {
-    return {};
-}
+const String TFGAudioProcessor::getProgramName (int index) { return {}; }
 
-void TFGAudioProcessor::changeProgramName (int index, const String& newName) {
-}
-
-void TFGAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock) {
-    
-    //Configuración de los filtros de paso bajo y paso alto
-    dsp::ProcessSpec spec;
-    spec.maximumBlockSize = samplesPerBlock;
-    spec.numChannels = 1;
-    spec.sampleRate = sampleRate;
-    leftChain.prepare(spec);
-    rightChain.prepare(spec);
-    updateFilters();
-    
-}
-
-void TFGAudioProcessor::releaseResources() {
-    // When playback stops, you can use this as an opportunity to free up any
-    // spare memory, etc.
-}
+void TFGAudioProcessor::changeProgramName (int index, const String& newName) { }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
 bool TFGAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const {
@@ -118,124 +95,210 @@ bool TFGAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) cons
 }
 #endif
 
+void TFGAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock) {
+    
+    currentSampleRate = sampleRate;
+    
+    //Configuración de los filtros de paso bajo y paso alto
+    dsp::ProcessSpec spec;
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.numChannels = 1;
+    spec.sampleRate = sampleRate;
+    leftChain.prepare(spec);
+    rightChain.prepare(spec);
+    updateFilters();
+    
+    //Configuración del mixer, que gestiona la mezcla entre las señales Dry(sin efecto) y Wet(con efecto)
+    dsp::ProcessSpec spec2;
+    spec2.maximumBlockSize = samplesPerBlock;
+    spec2.numChannels = 2;
+    spec2.sampleRate = sampleRate;
+    dryWetMixer.prepare(spec2);
+}
+
+void TFGAudioProcessor::releaseResources() { }
+
 void TFGAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages) {
     
-    if (isPluginOn) {
+    ScopedNoDenormals noDenormals;
+    auto totalNumInputChannels = getTotalNumInputChannels();
+    auto totalNumOutputChannels = getTotalNumOutputChannels();
+    currentNumSamples = buffer.getNumSamples();
+    
+    //En primer lugar, obtenemos el objeto de tipo AudioPlayHead, que contiene información sobre el estado y la
+    //posición del cursor de reproducción. Según la documentación, esta función sólo se puede llamar desde processBlock()
+    playHead = this->getPlayHead();
+    if (playHead != nullptr) {
+        playHead->getCurrentPosition(cpi);
+    }
         
-        //En primer lugar, al comenzar a procesar el audio obtenemos el valor actual de BPM
-        playHead = this->getPlayHead();
-        if (playHead != nullptr) {
-            playHead->getCurrentPosition(cpi);
+    if(cpi.isPlaying) { //Audio en reproducción
+        
+        //Calculamos si hay que esperar, y cuantos bloques deberia esperar
+        //La espera se produce cuando iniciamos la reproduccion fuera del punto de halfspeed,
+        //y debemos esperar al siguiente punto para empezar a realizar el efecto
+        calculateRemainingWaitingCycles();
+        
+        if(remainingWaitingCycles >= 0) {
+            muteAudio(buffer, totalNumInputChannels, currentNumSamples);
+            --remainingWaitingCycles;
         }
         
-        int channelDataArraySize = buffer.getNumSamples();
-        
-        //En esta parte se va a gestionar cuando se activa y desactiva el efecto
-        double beatLength = 60 / cpi.bpm; // Duracion de un pulso; la necesitamos para hacer el halftime mas basico.
-        double compas = beatLength * 4 * effectFactor; //Duracion de un compas de 4/4 (para ello hacer *4)
-        double currentTimePosition = cpi.timeInSeconds;
-        
-        int currentNumProcessBlocks = numProcessBlocks * effectFactor;
-        //TODO: habra que tener en cuenta de alguna manera, que si cambia el effectFactor durante la reproduccion, el programa tendra que cambiar el procesado para que el sonido se adapte al nuevo efecto.
-
-        
-        if (currentTimePosition == 0)
-            initializeBlockBufferArray(channelDataArraySize, currentNumProcessBlocks);
         else {
-            if (fmod(currentTimePosition, compas) < modError) {
-                if (!hasToProcessBlock) destroyBlockBufferArray();
-                else initializeBlockBufferArray(channelDataArraySize, currentNumProcessBlocks);
-            }
-        }
-        
-        ScopedNoDenormals noDenormals;
-        auto totalNumInputChannels  = getTotalNumInputChannels();
-        auto totalNumOutputChannels = getTotalNumOutputChannels();
-        
-        for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-            buffer.clear (i, 0, channelDataArraySize);
-        
-        //** Ahora mismo procesa 39 o 40 bloques, habra que afinar eso porque yo creo que son 40 los que realmente procesa.
-        //Hay que gestionarlo de manera que esos 40 bloques que procesa, se conviertan en 80 bloques finales con halftime.
-        
-        //Si el plugin debe activar el efecto, entrará en este IF
-        if (hasToProcessBlock) {
             
-            //DBG("processed block: " + std::to_string(currentBlock));
-            ++currentBlock;
-            
-            //En primer lugar, vamos a escribir en el buffer el bloque actual,
-            //y avanzaremos al mismo tiempo el puntero de escritura.
-            for (int channel = 0; channel < totalNumInputChannels; ++channel) {
-                auto* channelData = buffer.getWritePointer (channel);
-                for (int sample = 0; sample < channelDataArraySize; ++sample) {
-                    blockBufferArray[writeBufferPosition] = channelData[sample];
-                    ++writeBufferPosition;
-                }
-            }
-            
-        }
-        
-        //Ahora, tenemos que ir leyendo todos aquellos bloques que hemos ido acumulando en el buffer.
-        //Iremos actualizando el valor de readBufferPosition para ir avanzando por el buffer en cada iteracion.
-        for (int channel = 0; channel < totalNumInputChannels; ++channel) {
-            auto* channelData = buffer.getWritePointer (channel);
-            
-            //Este es el caso base, en el que comienzo procesando y duplicando la 1era mitad del 1er bloque.
-            //Ahora lo que hay que hacer es pasar la otra mitad al siguiente bloque, para que la procese.
-            
-            int currentInterpolationIndex = 0;
-            for (int i = readBufferPosition; i < readBufferPosition + channelDataArraySize / 2; ++i) {
+            //En caso de que tengamos mas canales de salida que canales de entrada, esta funcion limpia los canales
+            //de salida que no contengan datos de entrada, para evitar que se produzca ruido de salida.
+            clearChannels(buffer, totalNumInputChannels, totalNumOutputChannels, buffer.getNumSamples());
 
-                channelData[currentInterpolationIndex] = blockBufferArray[i];
-                channelData[currentInterpolationIndex + 1] = (blockBufferArray[i] + blockBufferArray[i + 1])/2; //IMPORTANTE: hay que interpolar
-                currentInterpolationIndex += 2;
+            //A continuación, establezco el porcentaje de señal DRY/WET y
+            //envio el buffer DRY (sin aplicar efecto) al mixer, para que mas tarde pueda mezclarlo con la señal WET
+            dryWetMixer.setWetMixProportion(currentDryWetMix/100.0f);
+            dryWetMixer.pushDrySamples(buffer);
+            
+            //Gestionamos el efecto de halfspeed
+            if (amountOfNeededSamples == 0) {
+                buffer0.reserve(amountOfNeededSamples);
+                buffer1.reserve(amountOfNeededSamples);
             }
-            readBufferPosition += channelDataArraySize / 2;
+            
+            //Canal L
+            halfspeed(buffer, buffer0, 0, currentNumSamples, writeBufferPosition0, readBufferPosition0);
+            
+            //Canal R
+            halfspeed(buffer, buffer1, 1, currentNumSamples, writeBufferPosition1, readBufferPosition1);
+            
+            //Llamamos a la función que gestiona los filtros de paso bajo y paso alto
+            handleFilters(buffer);
+            
+            //Tras aplicar el efecto de halfspeed, pasamos la señal WET al mixer para que pueda combinarla con la señal DRY
+            dryWetMixer.mixWetSamples(buffer);
+            
+            //Gestionamos el slider del output, que controla el volumen con el que sale el audio del plugin
+            handleOutputGain(buffer, totalNumInputChannels, currentNumSamples);
+            
         }
         
-        //Llamamos a la función que gestiona los filtros de paso bajo y paso alto
-        handleFilters(buffer);
+    }
+    else { //Audio en pausa
+        resetHalfspeed();
+    }
+
+}
+
+void TFGAudioProcessor::calculateRemainingWaitingCycles() {
+    
+    if (amountOfNeededSamples == 0) { //Solo hay que calcularlo en el primer bloque tras hacer PLAY
         
-        //Por último, gestionamos el slider del output, que controla el volumen con el que sale el audio del plugin
-        handleOutputGain(totalNumInputChannels, buffer);
+        // (60 / cpi.bpm) es la duracion de un pulso; la necesitamos para hacer el halftime mas basico.
+        // A lo anterior se hace *4 para obtener la duracion de un compas de 4/4.
+        int totalLengthSamples = (60 * 4 * selectedTimeDivision / cpi.bpm ) * currentSampleRate;
+        amountOfNeededSamples = totalLengthSamples / 2; //Samples a acumular en cada ciclo de halfspeed
         
+        //Almaceno el numero de samples que quedan hasta el siguiente ciclo, para que el halftime
+        //comience de manera precisa
+        int64 remainingWithoutAprox = totalLengthSamples - (cpi.timeInSamples % totalLengthSamples);
+        
+        if (remainingWithoutAprox <= totalLengthSamples && remainingWithoutAprox >= (totalLengthSamples - 100)){
+            //Justo coincide con el inicio de un ciclo -> NO hay que esperar
+            //Aqui habra que jugar con un margen de error para que funcione OK; en este caso, 100 samples de margen
+            //Conforme avanzamos en el tiempo, hay un margen de error en el remaining haciendo que decrezca progresivamente
+            remainingWaitingCycles = 0;
+        }
+        else { //El ciclo ya ha empezado -> SI hay que esperar
+            //El numero de ciclos de processBlock() que debe esperar depende del punto de inicio de reproduccion
+            //Si justo coincide con el inicio del bloque, debera esperar x bloques
+            //Si coincide con un punto dentro de un bloque, debera esperar x bloques + 1, debido al bloque que ya ha empezado.
+            remainingWaitingCycles = (remainingWithoutAprox % currentNumSamples) == 0 ? remainingWithoutAprox/currentNumSamples : remainingWithoutAprox/currentNumSamples + 1;
+        }
+    
     }
 }
 
-void TFGAudioProcessor::initializeBlockBufferArray(int channelDataArraySize, int currentNumProcessBlocks) {
-    
-    //IMPORTANTE: hacer buffer circular
-    
-    //Esta funcion se encarga de inicializar el buffer que almacenara los bloques totales a procesar
-    //Al ponerse a true, debemos preparar todo para comenzar a interpolar los bloques que nos llegan.
-    hasToProcessBlock = true;
-    currentBlock = 0;
-    // De momento, inicializamos el array preparado para 40 bloques
-    //Habra que ver como puedo sacar ese numero de manera dinamica
-    blockBufferArray = new float[channelDataArraySize * currentNumProcessBlocks * 2]; //Multiplicamos por 2 debido al canal Izquierdo y Derecho
-    readBufferPosition = 0;
-    writeBufferPosition = 0;
+void TFGAudioProcessor::mainSelectorListener(double changedTimeDivision){
+    resetHalfspeed();
+    selectedTimeDivision = changedTimeDivision;
+    //TODO: solucionar CRASHEO en el 1/16; yo creo que es debido a que la funcion halfspeed no para y deberia parar
 }
 
-void TFGAudioProcessor::destroyBlockBufferArray() {
-    //Esta funcion se encarga de limpiar la memoria ocupada por el array del buffer
-    //Ademas, indica al plugin que no debe almacenar mas bloques
-    hasToProcessBlock = false;
-    //Borramos el array y dejamos el puntero a null
-    delete [] blockBufferArray;
-    blockBufferArray = NULL;
+void TFGAudioProcessor::resetHalfspeed() {
+    amountOfNeededSamples = 0;
+    buffer0.clear();
+    buffer1.clear();
+    writeBufferPosition0 = 0;
+    readBufferPosition0 = 0;
+    writeBufferPosition1 = 0;
+    readBufferPosition1 = 0;
 }
 
-void TFGAudioProcessor::handleOutputGain(int totalNumInputChannels, AudioBuffer<float> & buffer) {
-    for (int channel = 0; channel < totalNumInputChannels; ++channel) {
-        auto* channelData = buffer.getWritePointer (channel);
-        int channelDataArraySize = buffer.getNumSamples();
+void TFGAudioProcessor::halfspeed(AudioBuffer<float>& audioBuffer, std::vector<float>& writeBuffer, int numChannel, int numSamples, unsigned& writeBufferPosition, unsigned& readBufferPosition) {
         
-        for (int sample = 0; sample < channelDataArraySize; ++sample) {
+    //Escribirmos en el write buffer la mitad de los datos del ciclo (amountOfNeededSamples), para poder duplicarlos en la salida
+    if (writeBufferPosition < amountOfNeededSamples) {
+        
+        //La variable writeCount almacenara el total de samples a escribir en el writeBuffer
+        //Leeremos siempre numSamples, a excepcion de al final, ya que es posible que debamos leer menos de un bloque entero
+        auto writeCount = amountOfNeededSamples - writeBufferPosition > numSamples ? numSamples : amountOfNeededSamples - writeBufferPosition;
+        auto readPointer = audioBuffer.getReadPointer(numChannel);
+        writeBuffer.insert(writeBuffer.end(), readPointer , readPointer + writeCount);
+        writeBufferPosition += writeCount;
+    }
+    
+    //Leemos lo que esta almacenado en el writeBuffer para escribir en el buffer de salida
+    auto writePointer = audioBuffer.getWritePointer(numChannel);
+    int remaining = numSamples;
+    
+    //Obtenemos el elemento anterior para poder interpolar con el elemento actual
+    auto last = (readBufferPosition == 0 ? 0 : writeBuffer[readBufferPosition - 1]);
+    
+    while (remaining >= 2) {
+        remaining -= 2; //Por cada sample que leemos del writeBuffer, escribimos 2 samples en el buffer de salida
+        
+        //Leemos del writeBuffer y realizamos la interpolacion
+        *writePointer = (writeBuffer[readBufferPosition] - last)/2;
+        writePointer++;
+        *writePointer = writeBuffer[readBufferPosition];
+        writePointer++;
+        last = writeBuffer[readBufferPosition];
+        
+        //Avanzamos una posicion de lectura en el writeBuffer
+        readBufferPosition++;
+        
+        //
+        if (readBufferPosition >= writeBuffer.size()) {
+            writeBuffer.clear();
+            writeBufferPosition = 0;
+            readBufferPosition = 0;
+            // quedan datos sin sobrescribir que pertenecen al siquiente beat.
+            if (remaining) {
+                int copy_amount = remaining > amountOfNeededSamples ? amountOfNeededSamples : remaining;
+                auto readPointerRemainingSamples = audioBuffer.getReadPointer(numChannel) + numSamples - remaining;
+                writeBuffer.insert(writeBuffer.end(), readPointerRemainingSamples , readPointerRemainingSamples + copy_amount);
+                writeBufferPosition += remaining;
+            }
+        }
+    }
+
+}
+
+void TFGAudioProcessor::clearChannels(AudioBuffer<float>& buffer, int totalNumInputChannels, int totalNumOutputChannels, int numSamplesPerChannel){
+    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+        buffer.clear (i, 0, numSamplesPerChannel);
+}
+
+void TFGAudioProcessor::muteAudio(AudioBuffer<float> & buffer, int numChannels, int numSamples) {
+    for (int channel = 0; channel < numChannels; ++channel) {
+        auto * writePointer = buffer.getWritePointer (channel);
+        for (int sample = 0; sample < numSamples; ++sample) writePointer[sample] = 0;
+    }
+}
+
+void TFGAudioProcessor::handleOutputGain(AudioBuffer<float> & buffer, int numChannels, int numSamples) {
+    for (int channel = 0; channel < numChannels; ++channel) {
+        auto * writePointer = buffer.getWritePointer (channel);
+        for (int sample = 0; sample < numSamples; ++sample) {
             //El slider muestra valores en dB, pero para procesar esos valores tenemos que encontrar su
             //equivalente en valores de Gain, asi que utilizamos la funcion decibelsToGain
-            channelData[sample] = channelData[sample] * Decibels::decibelsToGain(currentDecibels);
+            writePointer[sample] = writePointer[sample] * Decibels::decibelsToGain(currentDecibels);
         }
     }
 }
@@ -255,13 +318,8 @@ void TFGAudioProcessor::handleFilters(AudioBuffer<float> & buffer) {
     rightChain.process (rightContext);
 }
 
-void TFGAudioProcessor::barButtonChangeCallback(float newBarValue) {
-    if(effectFactor != newBarValue)
-        effectFactor = newBarValue;
-}
-
-void TFGAudioProcessor::pluginOnOffButtonCallback() {
-    isPluginOn = isPluginOn ? false : true;
+void TFGAudioProcessor::pluginOnOffButtonCallback(bool isPluginOn) {
+    this->isPluginOn = isPluginOn;
 }
 
 bool TFGAudioProcessor::hasEditor() const {
