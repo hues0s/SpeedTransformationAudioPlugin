@@ -108,6 +108,7 @@ private:
     dsp::DryWetMixer<float> dryWetMixer;    //Esta clase facilita la mezcla de dos señales de audio
                                             //La utilizamos para combinar las señales DRY y WET
     
+    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TFGAudioProcessor)
     

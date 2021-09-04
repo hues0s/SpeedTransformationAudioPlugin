@@ -24,7 +24,7 @@ TFGAudioProcessor::TFGAudioProcessor()
 {
     
     dryWetMixer = dsp::DryWetMixer<float>(0);
-    dryWetMixer.setWetLatency(0);
+    //Establecemos: Volumen de la señal DRY = 1 - Volumen de la señal WET
     dryWetMixer.setMixingRule(dsp::DryWetMixingRule::linear);
 }
 
@@ -153,7 +153,7 @@ void TFGAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& mi
             //A continuación, establezco el porcentaje de señal DRY/WET y
             //envio el buffer DRY (sin aplicar efecto) al mixer, para que mas tarde pueda mezclarlo con la señal WET
             dryWetMixer.setWetMixProportion(currentDryWetMix/100.0f);
-            dryWetMixer.pushDrySamples(buffer);
+            dryWetMixer.pushDrySamples(dsp::AudioBlock<float>(buffer));
             
             //Gestionamos el efecto de halfspeed
             if (amountOfNeededSamples == 0) {
@@ -171,7 +171,7 @@ void TFGAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& mi
             handleFilters(buffer);
             
             //Tras aplicar el efecto de halfspeed, pasamos la señal WET al mixer para que pueda combinarla con la señal DRY
-            dryWetMixer.mixWetSamples(buffer);
+            dryWetMixer.mixWetSamples(dsp::AudioBlock<float>(buffer));
             
             //Gestionamos el slider del output, que controla el volumen con el que sale el audio del plugin
             handleOutputGain(buffer, totalNumInputChannels, currentNumSamples);
@@ -217,7 +217,6 @@ void TFGAudioProcessor::calculateRemainingWaitingCycles() {
 void TFGAudioProcessor::mainSelectorListener(double changedTimeDivision){
     resetHalfspeed();
     selectedTimeDivision = changedTimeDivision;
-    //TODO: solucionar CRASHEO en el 1/16; yo creo que es debido a que la funcion halfspeed no para y deberia parar
 }
 
 void TFGAudioProcessor::resetHalfspeed() {
@@ -231,8 +230,10 @@ void TFGAudioProcessor::resetHalfspeed() {
 }
 
 void TFGAudioProcessor::halfspeed(AudioBuffer<float>& audioBuffer, std::vector<float>& writeBuffer, int numChannel, int numSamples, unsigned& writeBufferPosition, unsigned& readBufferPosition) {
-        
-    //Escribirmos en el write buffer la mitad de los datos del ciclo (amountOfNeededSamples), para poder duplicarlos en la salida
+    
+    bool test = false;
+    
+    //Escribimos en el write buffer el bloque de audio entrante
     if (writeBufferPosition < amountOfNeededSamples) {
         
         //La variable writeCount almacenara el total de samples a escribir en el writeBuffer
@@ -249,7 +250,7 @@ void TFGAudioProcessor::halfspeed(AudioBuffer<float>& audioBuffer, std::vector<f
     
     //Obtenemos el elemento anterior para poder interpolar con el elemento actual
     auto last = (readBufferPosition == 0 ? 0 : writeBuffer[readBufferPosition - 1]);
-    
+        
     while (remaining >= 2) {
         remaining -= 2; //Por cada sample que leemos del writeBuffer, escribimos 2 samples en el buffer de salida
         
@@ -263,12 +264,15 @@ void TFGAudioProcessor::halfspeed(AudioBuffer<float>& audioBuffer, std::vector<f
         //Avanzamos una posicion de lectura en el writeBuffer
         readBufferPosition++;
         
-        //
+        //Si hemos acabado de leer el writeBuffer, entramos aqui y limpiamos
         if (readBufferPosition >= writeBuffer.size()) {
             writeBuffer.clear();
             writeBufferPosition = 0;
             readBufferPosition = 0;
-            // quedan datos sin sobrescribir que pertenecen al siquiente beat.
+            
+            test = true;
+            
+            // Si quedan datos sin sobrescribir que pertenecen al siquiente beat, los guardamos.
             if (remaining) {
                 int copy_amount = remaining > amountOfNeededSamples ? amountOfNeededSamples : remaining;
                 auto readPointerRemainingSamples = audioBuffer.getReadPointer(numChannel) + numSamples - remaining;
@@ -276,6 +280,35 @@ void TFGAudioProcessor::halfspeed(AudioBuffer<float>& audioBuffer, std::vector<f
                 writeBufferPosition += remaining;
             }
         }
+    }
+    
+    if (test){
+        //Hemos acabado de leer todo y hacemos fade out para quitar clipping
+        
+        //PROBLEMA: el sample final deberia ser 0 y no lo es -> INVESTIGAR!!!!
+        //audioBuffer.applyGainRamp(numChannel, 0, audioBuffer.getNumSamples(), 0.0f, 1.0f);
+        //DBG("Write pointer after = " + std::to_string(*(writePointer-1024)));
+        //DBG("Audio buffer after = " + std::to_string(audioBuffer.getSample(numChannel, audioBuffer.getNumSamples()-1024)));
+        //audioBuffer.reverse(numChannel, 0, audioBuffer.getNumSamples());
+        //audioBuffer.applyGain(numChannel, 0, audioBuffer.getNumSamples()/2, 0.0f);
+        //audioBuffer.applyGainRamp(numChannel, audioBuffer.getNumSamples()/2, audioBuffer.getNumSamples()/2, 0.0f, 1.0f);
+        //audioBuffer.reverse(numChannel, 0, audioBuffer.getNumSamples());
+        //DBG("FIN GainRamp Channel " + std::to_string(numChannel));
+        
+        /*for (int i = 0; i < audioBuffer.getNumSamples(); ++i){
+            DBG("FIN: "+ std::to_string(audioBuffer.getSample(numChannel, i)));
+        }*/
+        
+    }
+    
+    if(readBufferPosition <= audioBuffer.getNumSamples()/2){
+        
+        audioBuffer.applyGain(numChannel, 0, audioBuffer.getNumSamples()/2, 0.0f);
+        audioBuffer.applyGainRamp(numChannel, audioBuffer.getNumSamples()/2, audioBuffer.getNumSamples()/2, 0.0f, 1.0f);
+        //DBG("INI GainRamp Channel " + std::to_string(numChannel));
+        //for (int i = 0; i < audioBuffer.getNumSamples(); ++i){
+            //DBG("INI: "+ std::to_string(audioBuffer.getSample(numChannel, i)));
+        //}
     }
 
 }

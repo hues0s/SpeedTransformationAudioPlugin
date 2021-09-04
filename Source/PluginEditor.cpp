@@ -82,7 +82,11 @@ void TFGAudioProcessorEditor::resized() {
     mixSlider.setBounds(getWidth() - 150/2 - rotarySliderWidth/2, (getHeight() - separatorTop)/3 * 1 + separatorTop, rotarySliderWidth, (getHeight() - separatorTop)/3);
     gainSlider.setBounds(getWidth() - 150/2 - rotarySliderWidth/2, (getHeight() - separatorTop)/3 * 2 + separatorTop, rotarySliderWidth, (getHeight() - separatorTop)/3);
     
-    mainSelectorSlider.setBounds(Rectangle<int>(getWidth() - 350, getWidth() - 350).withCentre(Point<int>((getWidth() - 300)/2,(getHeight() - separatorTop)/2 + separatorTop)));
+    mainSelectorSlider.setBounds(Rectangle<int>(getWidth() - 475, getWidth() - 475).withCentre(Point<int>((getWidth() - 300)/2,(getHeight() - separatorTop)/2 + separatorTop - 25)));
+    
+    halftimeMixSlider.setBounds(Rectangle<int>(getWidth() - 605, getWidth() - 605).withCentre(Point<int>((getWidth() - 300)/2, getHeight() - 60)));
+    mainHaltimePanSlider.setBounds(Rectangle<int>(getWidth() - 605, getWidth() - 605).withCentre(Point<int>((getWidth() - 300)/2 + 90, getHeight() - 60)));
+    extraHalftimePanSlider.setBounds(Rectangle<int>(getWidth() - 605, getWidth() - 605).withCentre(Point<int>((getWidth() - 300)/2 - 90, getHeight() - 60)));
     
 }
 
@@ -130,5 +134,10 @@ void TFGAudioProcessorEditor::setUpUI() {
     pluginOnOffButton.onClick = [this] { audioProcessor.pluginOnOffButtonCallback(pluginOnOffButton.getToggleStateValue().getValue()); };
     pluginOnOffButton.setLookAndFeel(&lookAndFeelPowerButton);
     //addAndMakeVisible(pluginOnOffButton);
+    
+    //Halftime controls
+    addAndMakeVisible(halftimeMixSlider);
+    addAndMakeVisible(mainHaltimePanSlider);
+    addAndMakeVisible(extraHalftimePanSlider);
     
 }
