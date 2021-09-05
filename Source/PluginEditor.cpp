@@ -88,7 +88,7 @@ void TFGAudioProcessorEditor::resized() {
     
     tabMixSlider.setBounds((getWidth() - 300)/2 - rotarySliderWidth/2, mainSelectorRectangle.getY() + 200, rotarySliderWidth - 6, (getHeight() - separatorTop)/3 - 6);
     mainPanSlider.setBounds((getWidth() - 300)/2 - rotarySliderWidth/2 - 100, mainSelectorRectangle.getY() + 200, rotarySliderWidth - 6, (getHeight() - separatorTop)/3 - 6);
-    extraPanSlider.setBounds((getWidth() - 300)/2 - rotarySliderWidth/2 + 100, mainSelectorRectangle.getY() + 200, rotarySliderWidth - 6, (getHeight() - separatorTop)/3 - 6);
+    auxPanSlider.setBounds((getWidth() - 300)/2 - rotarySliderWidth/2 + 100, mainSelectorRectangle.getY() + 200, rotarySliderWidth - 6, (getHeight() - separatorTop)/3 - 6);
     
 }
 
@@ -103,7 +103,7 @@ void TFGAudioProcessorEditor::sliderValueChanged(Slider *slider) {
     else if (slider == &mixSlider) audioProcessor.currentDryWetMix = int(mixSlider.getValue());
     
     else if (slider == &mainPanSlider) audioProcessor.currentMainPan = mainPanSlider.getValue();
-    
+    else if (slider == &auxPanSlider) audioProcessor.currentAuxPan = auxPanSlider.getValue();
     else if (slider == &tabMixSlider) audioProcessor.currentDryWetTabMix = int(tabMixSlider.getValue());
 }
 
@@ -150,9 +150,9 @@ void TFGAudioProcessorEditor::setUpUI() {
     mainPanSlider.addListener(this);
     addAndMakeVisible(mainPanSlider);
     
-    extraPanSlider.init(-1.0, 1.0, 0.1, "Aux Pan", "");
-    extraPanSlider.setValue(0.0);
-    extraPanSlider.addListener(this);
-    addAndMakeVisible(extraPanSlider);
+    auxPanSlider.init(-1.0, 1.0, 0.1, "Aux Pan", "");
+    auxPanSlider.setValue(0.0);
+    auxPanSlider.addListener(this);
+    addAndMakeVisible(auxPanSlider);
     
 }

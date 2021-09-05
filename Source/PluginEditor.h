@@ -51,6 +51,6 @@ private:
     
     const double timeDivisionArray[9] = { 0.0625, 1/8, 0.125, 0.25, 0.5, 1, 2, 4, 8 };
   
-    CustomRotarySlider tabMixSlider, mainPanSlider, extraPanSlider;
+    CustomRotarySlider tabMixSlider, mainPanSlider, auxPanSlider;
     ToggleButton mainHalftimeButton, extraHalftimeButton;
 };

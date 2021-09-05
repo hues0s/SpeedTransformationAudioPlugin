@@ -143,7 +143,7 @@ void TFGAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& mi
         //Calculamos si hay que esperar, y cuantos bloques deberia esperar
         //La espera se produce cuando iniciamos la reproduccion fuera del punto de halfspeed,
         //y debemos esperar al siguiente punto para empezar a realizar el efecto
-        calculateRemainingWaitingCycles();
+        calculateRemainingWaitingCycles(selectedTimeDivision);
         
         if(remainingWaitingCycles >= 0) {
             muteAudio(buffer, totalNumInputChannels, currentNumSamples);
@@ -163,27 +163,30 @@ void TFGAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& mi
             
             //Gestionamos el halfspeed EXTRA
             if(true){
+                //Hay que hacer una copia del buffer para que el AUX pueda crear su version independiente del MAIN
+                AudioBuffer<float> auxBuffer = duplicateBuffer(buffer, totalNumInputChannels, currentNumSamples);
+                //Gestionamos el Pan del halftime AUX
+                handlePan(auxBuffer, totalNumInputChannels, currentNumSamples, currentAuxPan);
                 dryWetTabMixer.setWetMixProportion(currentDryWetTabMix/100.0f);
-                dryWetTabMixer.pushDrySamples(dsp::AudioBlock<float>(buffer));//CAMBIAR esto solo es DEMO
+                dryWetTabMixer.pushDrySamples(dsp::AudioBlock<float>(auxBuffer));//CAMBIAR esto solo es DEMO
             }
             
             //Gestionamos el efecto de halfspeed PRINCIPAL
-            if (amountOfNeededSamples == 0) {
-                buffer0.reserve(amountOfNeededSamples);
-                buffer1.reserve(amountOfNeededSamples);
+            if (amountOfNeededSamplesMain == 0) {
+                buffer0Main.reserve(amountOfNeededSamplesMain);
+                buffer1Main.reserve(amountOfNeededSamplesMain);
             }
             //Canal L
-            halfspeed(buffer, buffer0, 0, currentNumSamples, writeBufferPosition0, readBufferPosition0);
+            halfspeed(buffer, buffer0Main, 0, currentNumSamples, writeBufferPosition0, readBufferPosition0, amountOfNeededSamplesMain);
             //Canal R
-            halfspeed(buffer, buffer1, 1, currentNumSamples, writeBufferPosition1, readBufferPosition1);
+            halfspeed(buffer, buffer1Main, 1, currentNumSamples, writeBufferPosition1, readBufferPosition1, amountOfNeededSamplesMain);
             
             //Tras aplicar el halftime PRINCIPAL, debemos añadir el buffer al TabMix para que lo mezcle con el AUX
             if(true){
+                //Gestionamos el control de Pan del halftime MAIN
+                handlePan(buffer, totalNumInputChannels, currentNumSamples, currentMainPan);
                 dryWetTabMixer.mixWetSamples(dsp::AudioBlock<float>(buffer));
             }
-            
-            //Gestionamos el control de Pan
-            handlePan(buffer, totalNumInputChannels, currentNumSamples, currentMainPan);
             
             //Llamamos a la función que gestiona los filtros de paso bajo y paso alto
             handleFilters(buffer);
@@ -203,14 +206,14 @@ void TFGAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& mi
 
 }
 
-void TFGAudioProcessor::calculateRemainingWaitingCycles() {
+void TFGAudioProcessor::calculateRemainingWaitingCycles(double timeDivision) {
     
-    if (amountOfNeededSamples == 0) { //Solo hay que calcularlo en el primer bloque tras hacer PLAY
+    if (amountOfNeededSamplesMain == 0) { //Solo hay que calcularlo en el primer bloque tras hacer PLAY
         
         // (60 / cpi.bpm) es la duracion de un pulso; la necesitamos para hacer el halftime mas basico.
         // A lo anterior se hace *4 para obtener la duracion de un compas de 4/4.
-        int totalLengthSamples = (60 * 4 * selectedTimeDivision / cpi.bpm ) * currentSampleRate;
-        amountOfNeededSamples = totalLengthSamples / 2; //Samples a acumular en cada ciclo de halfspeed
+        int totalLengthSamples = (60 * 4 * timeDivision / cpi.bpm ) * currentSampleRate;
+        amountOfNeededSamplesMain = totalLengthSamples / 2; //Samples a acumular en cada ciclo de halfspeed
         
         //Almaceno el numero de samples que quedan hasta el siguiente ciclo, para que el halftime
         //comience de manera precisa
@@ -238,21 +241,21 @@ void TFGAudioProcessor::mainSelectorListener(double changedTimeDivision){
 }
 
 void TFGAudioProcessor::resetHalfspeed() {
-    amountOfNeededSamples = 0;
-    buffer0.clear();
-    buffer1.clear();
+    amountOfNeededSamplesMain = 0;
+    buffer0Main.clear();
+    buffer1Main.clear();
     writeBufferPosition0 = 0;
     readBufferPosition0 = 0;
     writeBufferPosition1 = 0;
     readBufferPosition1 = 0;
 }
 
-void TFGAudioProcessor::halfspeed(AudioBuffer<float>& audioBuffer, std::vector<float>& writeBuffer, int numChannel, int numSamples, unsigned& writeBufferPosition, unsigned& readBufferPosition) {
+void TFGAudioProcessor::halfspeed(AudioBuffer<float>& audioBuffer, std::vector<float>& writeBuffer, int numChannel, int numSamples, unsigned& writeBufferPosition, unsigned& readBufferPosition, int amountOfNeededSamples) {
     
     bool hasToFadeOut = false;
     
     //Escribimos en el write buffer el bloque de audio entrante
-    if (writeBufferPosition < amountOfNeededSamples) {
+    if (writeBufferPosition < amountOfNeededSamplesMain) {
         
         //La variable writeCount almacenara el total de samples a escribir en el writeBuffer
         //Leeremos siempre numSamples, a excepcion de al final, ya que es posible que debamos leer menos de un bloque entero
@@ -446,4 +449,15 @@ void TFGAudioProcessor::updateFilters() {
     auto chainSettings = getChainSettings (apvts);
     updateLowCutFilter (chainSettings);
     updateHighCutFilter (chainSettings);
+}
+
+AudioBuffer<float> TFGAudioProcessor::duplicateBuffer(AudioBuffer<float>& buffer, int numChannels, int numSamples){
+    AudioBuffer<float> returnBuffer = AudioBuffer<float>(numChannels, numSamples);
+    for (int channel = 0; channel < numChannels; ++channel) {
+        auto * writePointer = returnBuffer.getWritePointer (channel);
+        for (int sample = 0; sample < numSamples; ++sample) {
+            writePointer[sample] = buffer.getSample(channel, sample);
+        }
+    }
+    return returnBuffer;
 }

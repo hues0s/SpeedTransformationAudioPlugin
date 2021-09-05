@@ -51,6 +51,7 @@ public:
     float currentDecibels { 0.0 };
     int currentDryWetMix { 100 };
     float currentMainPan { 0.0 };
+    float currentAuxPan { 0.0 };
     int currentDryWetTabMix { 100 };
     
     bool isPluginOn = true;
@@ -88,15 +89,15 @@ private:
     void clearChannels(AudioBuffer<float>& buffer, int totalNumInputChannels, int totalNumOutputChannels, int numSamplesPerChannel);
     
     //Gestion principal del efecto
-    void halfspeed(AudioBuffer<float>& audioBuffer, std::vector<float>& writeBuffer, int numChannel, int numSamples, unsigned& writeBufferPosition, unsigned& readBufferPosition);
+    void halfspeed(AudioBuffer<float>& audioBuffer, std::vector<float>& writeBuffer, int numChannel, int numSamples, unsigned& writeBufferPosition, unsigned& readBufferPosition, int amountOfNeededSamples);
     void resetHalfspeed();
     void muteAudio(AudioBuffer<float> & buffer, int numChannels, int numSamples);
     
     double currentSampleRate; // == Samples per second
-    int amountOfNeededSamples = 0; //cantidad de samples necesarios para realizar el efecto; sera /2 de los samples del fragmento
+    int amountOfNeededSamplesMain = 0; //cantidad de samples necesarios para realizar el efecto; sera /2 de los samples del fragmento
     
-    std::vector<float> buffer0;
-    std::vector<float> buffer1;
+    std::vector<float> buffer0Main;
+    std::vector<float> buffer1Main;
     
     //Punteros de posicion para el canal L
     unsigned writeBufferPosition0 = 0;
@@ -105,7 +106,7 @@ private:
     unsigned writeBufferPosition1 = 0;
     unsigned readBufferPosition1 = 0;
     
-    void calculateRemainingWaitingCycles();
+    void calculateRemainingWaitingCycles(double timeDivision);
     int64 remainingWaitingCycles = 0;
     
     dsp::DryWetMixer<float> dryWetMixer;    //Esta clase facilita la mezcla de dos señales de audio
@@ -115,6 +116,9 @@ private:
                             //Lo inicializamos como numero en vez de bool para que pueda afectar a los dos canales L y R
     
     dsp::DryWetMixer<float> dryWetTabMixer;
+    
+    //Funcion que recibe un buffer como entrada y devuelve un nuevo buffer independiente por salida
+    AudioBuffer<float> duplicateBuffer(AudioBuffer<float>& buffer, int numChannels, int numSamples);
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TFGAudioProcessor)
