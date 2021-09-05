@@ -82,11 +82,13 @@ void TFGAudioProcessorEditor::resized() {
     mixSlider.setBounds(getWidth() - 150/2 - rotarySliderWidth/2, (getHeight() - separatorTop)/3 * 1 + separatorTop, rotarySliderWidth, (getHeight() - separatorTop)/3);
     gainSlider.setBounds(getWidth() - 150/2 - rotarySliderWidth/2, (getHeight() - separatorTop)/3 * 2 + separatorTop, rotarySliderWidth, (getHeight() - separatorTop)/3);
     
-    mainSelectorSlider.setBounds(Rectangle<int>(getWidth() - 475, getWidth() - 475).withCentre(Point<int>((getWidth() - 300)/2,(getHeight() - separatorTop)/2 + separatorTop - 25)));
+    Rectangle<int> mainSelectorRectangle = Rectangle<int>(getWidth() - 475, getWidth() - 475).withCentre(Point<int>((getWidth() - 300)/2,(getHeight() - separatorTop)/2 + separatorTop - 25));
     
-    halftimeMixSlider.setBounds(Rectangle<int>(getWidth() - 605, getWidth() - 605).withCentre(Point<int>((getWidth() - 300)/2, getHeight() - 60)));
-    mainHaltimePanSlider.setBounds(Rectangle<int>(getWidth() - 605, getWidth() - 605).withCentre(Point<int>((getWidth() - 300)/2 + 90, getHeight() - 60)));
-    extraHalftimePanSlider.setBounds(Rectangle<int>(getWidth() - 605, getWidth() - 605).withCentre(Point<int>((getWidth() - 300)/2 - 90, getHeight() - 60)));
+    mainSelectorSlider.setBounds(mainSelectorRectangle);
+    
+    tabMixSlider.setBounds((getWidth() - 300)/2 - rotarySliderWidth/2, mainSelectorRectangle.getY() + 200, rotarySliderWidth - 6, (getHeight() - separatorTop)/3 - 6);
+    mainPanSlider.setBounds((getWidth() - 300)/2 - rotarySliderWidth/2 - 100, mainSelectorRectangle.getY() + 200, rotarySliderWidth - 6, (getHeight() - separatorTop)/3 - 6);
+    extraPanSlider.setBounds((getWidth() - 300)/2 - rotarySliderWidth/2 + 100, mainSelectorRectangle.getY() + 200, rotarySliderWidth - 6, (getHeight() - separatorTop)/3 - 6);
     
 }
 
@@ -136,8 +138,18 @@ void TFGAudioProcessorEditor::setUpUI() {
     //addAndMakeVisible(pluginOnOffButton);
     
     //Halftime controls
-    addAndMakeVisible(halftimeMixSlider);
-    addAndMakeVisible(mainHaltimePanSlider);
-    addAndMakeVisible(extraHalftimePanSlider);
+    tabMixSlider.init(0.0, 100.0, 1.0, "Tab Mix", "%");
+    tabMixSlider.addListener(this);
+    addAndMakeVisible(tabMixSlider);
+    
+    mainPanSlider.init(-1.0, 1.0, 0.1, "Main Pan", "");
+    mainPanSlider.setValue(0.0);
+    mainPanSlider.addListener(this);
+    addAndMakeVisible(mainPanSlider);
+    
+    extraPanSlider.init(-1.0, 1.0, 0.1, "Aux Pan", "");
+    extraPanSlider.setValue(0.0);
+    extraPanSlider.addListener(this);
+    addAndMakeVisible(extraPanSlider);
     
 }

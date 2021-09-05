@@ -163,9 +163,11 @@ void TFGAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& mi
             
             //Canal L
             halfspeed(buffer, buffer0, 0, currentNumSamples, writeBufferPosition0, readBufferPosition0);
-            
             //Canal R
             halfspeed(buffer, buffer1, 1, currentNumSamples, writeBufferPosition1, readBufferPosition1);
+            
+            //Gestionamos el control de Pan
+            handlePan(buffer, totalNumInputChannels, currentNumSamples);
             
             //Llamamos a la función que gestiona los filtros de paso bajo y paso alto
             handleFilters(buffer);
@@ -183,6 +185,17 @@ void TFGAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& mi
         resetHalfspeed();
     }
 
+}
+
+void TFGAudioProcessor::handlePan(AudioBuffer<float> & buffer, int numChannels, int numSamples) {
+    if(numChannels == 2 && false){
+        auto * writePointer = buffer.getWritePointer (0);
+        for (int sample = 0; sample < numSamples; ++sample)
+            writePointer[sample] = writePointer[sample] * 0.3;
+        writePointer = buffer.getWritePointer (1);
+        for (int sample = 0; sample < numSamples; ++sample)
+            writePointer[sample] = writePointer[sample] * 0.7;
+    }
 }
 
 void TFGAudioProcessor::calculateRemainingWaitingCycles() {
@@ -231,7 +244,7 @@ void TFGAudioProcessor::resetHalfspeed() {
 
 void TFGAudioProcessor::halfspeed(AudioBuffer<float>& audioBuffer, std::vector<float>& writeBuffer, int numChannel, int numSamples, unsigned& writeBufferPosition, unsigned& readBufferPosition) {
     
-    bool test = false;
+    bool hasToFadeOut = false;
     
     //Escribimos en el write buffer el bloque de audio entrante
     if (writeBufferPosition < amountOfNeededSamples) {
@@ -270,9 +283,9 @@ void TFGAudioProcessor::halfspeed(AudioBuffer<float>& audioBuffer, std::vector<f
             writeBufferPosition = 0;
             readBufferPosition = 0;
             
-            test = true;
+            hasToFadeOut = true;
             
-            // Si quedan datos sin sobrescribir que pertenecen al siquiente beat, los guardamos.
+            // Si quedan datos sin sobrescribir que pertenecen al siquiente beat, los guardamos para terminar de leerlos.
             if (remaining) {
                 int copy_amount = remaining > amountOfNeededSamples ? amountOfNeededSamples : remaining;
                 auto readPointerRemainingSamples = audioBuffer.getReadPointer(numChannel) + numSamples - remaining;
@@ -282,35 +295,19 @@ void TFGAudioProcessor::halfspeed(AudioBuffer<float>& audioBuffer, std::vector<f
         }
     }
     
-    if (test){
+    if (hasToFadeOut){
         //Hemos acabado de leer todo y hacemos fade out para quitar clipping
-        
-        //PROBLEMA: el sample final deberia ser 0 y no lo es -> INVESTIGAR!!!!
-        //audioBuffer.applyGainRamp(numChannel, 0, audioBuffer.getNumSamples(), 0.0f, 1.0f);
-        //DBG("Write pointer after = " + std::to_string(*(writePointer-1024)));
-        //DBG("Audio buffer after = " + std::to_string(audioBuffer.getSample(numChannel, audioBuffer.getNumSamples()-1024)));
-        //audioBuffer.reverse(numChannel, 0, audioBuffer.getNumSamples());
-        //audioBuffer.applyGain(numChannel, 0, audioBuffer.getNumSamples()/2, 0.0f);
-        //audioBuffer.applyGainRamp(numChannel, audioBuffer.getNumSamples()/2, audioBuffer.getNumSamples()/2, 0.0f, 1.0f);
-        //audioBuffer.reverse(numChannel, 0, audioBuffer.getNumSamples());
-        //DBG("FIN GainRamp Channel " + std::to_string(numChannel));
-        
-        /*for (int i = 0; i < audioBuffer.getNumSamples(); ++i){
-            DBG("FIN: "+ std::to_string(audioBuffer.getSample(numChannel, i)));
-        }*/
-        
+        audioBuffer.applyGainRamp(numChannel, 0, numSamples/2, 1.0f, 0.0f);
+        audioBuffer.applyGain(numChannel, numSamples/2, numSamples/2, 0.0f);
+        if(hasToFadeIn == 0) hasToFadeIn = 2;
     }
     
-    if(readBufferPosition <= audioBuffer.getNumSamples()/2){
-        
-        audioBuffer.applyGain(numChannel, 0, audioBuffer.getNumSamples()/2, 0.0f);
-        audioBuffer.applyGainRamp(numChannel, audioBuffer.getNumSamples()/2, audioBuffer.getNumSamples()/2, 0.0f, 1.0f);
-        //DBG("INI GainRamp Channel " + std::to_string(numChannel));
-        //for (int i = 0; i < audioBuffer.getNumSamples(); ++i){
-            //DBG("INI: "+ std::to_string(audioBuffer.getSample(numChannel, i)));
-        //}
+    else if(hasToFadeIn > 0){
+        audioBuffer.applyGain(numChannel, 0, numSamples/2, 0.0f);
+        audioBuffer.applyGainRamp(numChannel, numSamples/2, numSamples/2, 0.0f, 1.0f);
+        --hasToFadeIn;
     }
-
+    
 }
 
 void TFGAudioProcessor::clearChannels(AudioBuffer<float>& buffer, int totalNumInputChannels, int totalNumOutputChannels, int numSamplesPerChannel){

@@ -74,6 +74,7 @@ private:
     const double defaultQ = 0.71;
     
     void handleOutputGain(AudioBuffer<float> & buffer, int numChannels, int numSamples);
+    void handlePan(AudioBuffer<float> & buffer, int numChannels, int numSamples);
     void handleFilters(AudioBuffer<float> & buffer);
     
     dsp::ProcessorChain<dsp::IIR::Filter<float>, dsp::IIR::Filter<float>> leftChain, rightChain;
@@ -108,6 +109,8 @@ private:
     dsp::DryWetMixer<float> dryWetMixer;    //Esta clase facilita la mezcla de dos señales de audio
                                             //La utilizamos para combinar las señales DRY y WET
     
+    int hasToFadeIn = 0;    //Inicializamos a true para que tambien haga FADE IN en el primer intervalo
+                            //Lo inicializamos como numero en vez de bool para que pueda afectar a los dos canales L y R
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TFGAudioProcessor)
