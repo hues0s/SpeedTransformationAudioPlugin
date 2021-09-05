@@ -102,6 +102,9 @@ void TFGAudioProcessorEditor::sliderValueChanged(Slider *slider) {
     
     else if (slider == &mixSlider) audioProcessor.currentDryWetMix = int(mixSlider.getValue());
     
+    else if (slider == &mainPanSlider) audioProcessor.currentMainPan = mainPanSlider.getValue();
+    
+    else if (slider == &tabMixSlider) audioProcessor.currentDryWetTabMix = int(tabMixSlider.getValue());
 }
 
 void TFGAudioProcessorEditor::setUpUI() {

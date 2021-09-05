@@ -50,6 +50,8 @@ public:
     double selectedTimeDivision = { 1 };
     float currentDecibels { 0.0 };
     int currentDryWetMix { 100 };
+    float currentMainPan { 0.0 };
+    int currentDryWetTabMix { 100 };
     
     bool isPluginOn = true;
     void pluginOnOffButtonCallback(bool isPluginOn);
@@ -74,7 +76,7 @@ private:
     const double defaultQ = 0.71;
     
     void handleOutputGain(AudioBuffer<float> & buffer, int numChannels, int numSamples);
-    void handlePan(AudioBuffer<float> & buffer, int numChannels, int numSamples);
+    void handlePan(AudioBuffer<float> & buffer, int numChannels, int numSamples, float currentPan);
     void handleFilters(AudioBuffer<float> & buffer);
     
     dsp::ProcessorChain<dsp::IIR::Filter<float>, dsp::IIR::Filter<float>> leftChain, rightChain;
@@ -111,6 +113,8 @@ private:
     
     int hasToFadeIn = 0;    //Inicializamos a true para que tambien haga FADE IN en el primer intervalo
                             //Lo inicializamos como numero en vez de bool para que pueda afectar a los dos canales L y R
+    
+    dsp::DryWetMixer<float> dryWetTabMixer;
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TFGAudioProcessor)

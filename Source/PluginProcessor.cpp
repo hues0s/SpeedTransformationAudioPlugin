@@ -9,6 +9,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include <cmath>
 
 TFGAudioProcessor::TFGAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -26,6 +27,10 @@ TFGAudioProcessor::TFGAudioProcessor()
     dryWetMixer = dsp::DryWetMixer<float>(0);
     //Establecemos: Volumen de la señal DRY = 1 - Volumen de la señal WET
     dryWetMixer.setMixingRule(dsp::DryWetMixingRule::linear);
+    
+    //Inicializamos el tab mixer
+    dryWetTabMixer = dsp::DryWetMixer<float>(0);
+    dryWetTabMixer.setMixingRule(dsp::DryWetMixingRule::linear);
 }
 
 TFGAudioProcessor::~TFGAudioProcessor() { }
@@ -114,6 +119,7 @@ void TFGAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock) {
     spec2.numChannels = 2;
     spec2.sampleRate = sampleRate;
     dryWetMixer.prepare(spec2);
+    dryWetTabMixer.prepare(spec2);
 }
 
 void TFGAudioProcessor::releaseResources() { }
@@ -155,19 +161,29 @@ void TFGAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& mi
             dryWetMixer.setWetMixProportion(currentDryWetMix/100.0f);
             dryWetMixer.pushDrySamples(dsp::AudioBlock<float>(buffer));
             
-            //Gestionamos el efecto de halfspeed
+            //Gestionamos el halfspeed EXTRA
+            if(true){
+                dryWetTabMixer.setWetMixProportion(currentDryWetTabMix/100.0f);
+                dryWetTabMixer.pushDrySamples(dsp::AudioBlock<float>(buffer));//CAMBIAR esto solo es DEMO
+            }
+            
+            //Gestionamos el efecto de halfspeed PRINCIPAL
             if (amountOfNeededSamples == 0) {
                 buffer0.reserve(amountOfNeededSamples);
                 buffer1.reserve(amountOfNeededSamples);
             }
-            
             //Canal L
             halfspeed(buffer, buffer0, 0, currentNumSamples, writeBufferPosition0, readBufferPosition0);
             //Canal R
             halfspeed(buffer, buffer1, 1, currentNumSamples, writeBufferPosition1, readBufferPosition1);
             
+            //Tras aplicar el halftime PRINCIPAL, debemos añadir el buffer al TabMix para que lo mezcle con el AUX
+            if(true){
+                dryWetTabMixer.mixWetSamples(dsp::AudioBlock<float>(buffer));
+            }
+            
             //Gestionamos el control de Pan
-            handlePan(buffer, totalNumInputChannels, currentNumSamples);
+            handlePan(buffer, totalNumInputChannels, currentNumSamples, currentMainPan);
             
             //Llamamos a la función que gestiona los filtros de paso bajo y paso alto
             handleFilters(buffer);
@@ -185,17 +201,6 @@ void TFGAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& mi
         resetHalfspeed();
     }
 
-}
-
-void TFGAudioProcessor::handlePan(AudioBuffer<float> & buffer, int numChannels, int numSamples) {
-    if(numChannels == 2 && false){
-        auto * writePointer = buffer.getWritePointer (0);
-        for (int sample = 0; sample < numSamples; ++sample)
-            writePointer[sample] = writePointer[sample] * 0.3;
-        writePointer = buffer.getWritePointer (1);
-        for (int sample = 0; sample < numSamples; ++sample)
-            writePointer[sample] = writePointer[sample] * 0.7;
-    }
 }
 
 void TFGAudioProcessor::calculateRemainingWaitingCycles() {
@@ -330,6 +335,19 @@ void TFGAudioProcessor::handleOutputGain(AudioBuffer<float> & buffer, int numCha
             //equivalente en valores de Gain, asi que utilizamos la funcion decibelsToGain
             writePointer[sample] = writePointer[sample] * Decibels::decibelsToGain(currentDecibels);
         }
+    }
+}
+
+void TFGAudioProcessor::handlePan(AudioBuffer<float> & buffer, int numChannels, int numSamples, float currentPan) {
+    if(numChannels == 2){
+        double panParameter = M_PI*(currentPan + 1)/4;
+        
+        auto * writePointer = buffer.getWritePointer (0);
+        for (int sample = 0; sample < numSamples; ++sample)
+            writePointer[sample] = writePointer[sample] * cos(panParameter);
+        writePointer = buffer.getWritePointer (1);
+        for (int sample = 0; sample < numSamples; ++sample)
+            writePointer[sample] = writePointer[sample] * sin(panParameter);
     }
 }
 
