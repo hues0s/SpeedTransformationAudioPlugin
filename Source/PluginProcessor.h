@@ -47,15 +47,18 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
     //==============================================================================
-    double selectedTimeDivision = { 1 };
+    //double selectedTimeDivision = { 1 };
+    
+    double selectedTimeDivision[2] = { 1, 1 }; //Guardamos las selecciones de Halftime Main [0] y Aux [1] en un mismo array.
+    
     float currentDecibels { 0.0 };
     int currentDryWetMix { 100 };
     float currentMainPan { 0.0 };
     float currentAuxPan { 0.0 };
     int currentDryWetTabMix { 100 };
     
-    bool isPluginOn = true;
-    void pluginOnOffButtonCallback(bool isPluginOn);
+    bool isAuxOn = true;
+    void auxOnOffButtonCallback(bool isAuxOn);
     
     static AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     AudioProcessorValueTreeState apvts { *this, nullptr, "Parameters", createParameterLayout() };
@@ -67,7 +70,7 @@ public:
     ChainSettings getChainSettings (AudioProcessorValueTreeState& apvts);
     
     
-    void mainSelectorListener(double changedTimeDivision);
+    void selectorListener(double changedTimeDivision, int index);
     
 private:
     
@@ -89,31 +92,44 @@ private:
     void clearChannels(AudioBuffer<float>& buffer, int totalNumInputChannels, int totalNumOutputChannels, int numSamplesPerChannel);
     
     //Gestion principal del efecto
-    void halfspeed(AudioBuffer<float>& audioBuffer, std::vector<float>& writeBuffer, int numChannel, int numSamples, unsigned& writeBufferPosition, unsigned& readBufferPosition, int amountOfNeededSamples);
+    void halfspeed(AudioBuffer<float>& audioBuffer, std::vector<float>& writeBuffer, int numChannel, int numSamples, unsigned& writeBufferPosition, unsigned& readBufferPosition, int& amountOfNeededSamples, int& hasToFadeIn);
     void resetHalfspeed();
     void muteAudio(AudioBuffer<float> & buffer, int numChannels, int numSamples);
     
     double currentSampleRate; // == Samples per second
-    int amountOfNeededSamplesMain = 0; //cantidad de samples necesarios para realizar el efecto; sera /2 de los samples del fragmento
     
+    //Variables para el halftime MAIN
+    //int amountOfNeededSamplesMain = 0; //cantidad de samples necesarios para realizar el efecto; sera /2 de los samples del fragmento
     std::vector<float> buffer0Main;
     std::vector<float> buffer1Main;
-    
     //Punteros de posicion para el canal L
-    unsigned writeBufferPosition0 = 0;
-    unsigned readBufferPosition0 = 0;
+    unsigned writeBufferPosition0Main = 0;
+    unsigned readBufferPosition0Main = 0;
     //Punteros de posicion para el canal R
-    unsigned writeBufferPosition1 = 0;
-    unsigned readBufferPosition1 = 0;
+    unsigned writeBufferPosition1Main = 0;
+    unsigned readBufferPosition1Main = 0;
     
+    //Variables para el halftime AUX
+    //int amountOfNeededSamplesAux = 0;
+    std::vector<float> buffer0Aux;
+    std::vector<float> buffer1Aux;
+    //Punteros de posicion para el canal L Aux
+    unsigned writeBufferPosition0Aux = 0;
+    unsigned readBufferPosition0Aux = 0;
+    //Punteros de posicion para el canal R Aux
+    unsigned writeBufferPosition1Aux = 0;
+    unsigned readBufferPosition1Aux = 0;
+    
+    bool hasCalculatedWaitingCycles = false;
     void calculateRemainingWaitingCycles(double timeDivision);
     int64 remainingWaitingCycles = 0;
     
     dsp::DryWetMixer<float> dryWetMixer;    //Esta clase facilita la mezcla de dos señales de audio
                                             //La utilizamos para combinar las señales DRY y WET
     
-    int hasToFadeIn = 0;    //Inicializamos a true para que tambien haga FADE IN en el primer intervalo
-                            //Lo inicializamos como numero en vez de bool para que pueda afectar a los dos canales L y R
+    int hasToFadeInMain = 0;    //Inicializamos a true para que tambien haga FADE IN en el primer intervalo
+                                //Lo inicializamos como numero en vez de bool para que pueda afectar a los dos canales L y R
+    int hasToFadeInAux = 0;
     
     dsp::DryWetMixer<float> dryWetTabMixer;
     

@@ -73,8 +73,6 @@ void TFGAudioProcessorEditor::paint (Graphics& g) {
 }
 
 void TFGAudioProcessorEditor::resized() {
-         
-    pluginOnOffButton.setBounds(10,10,40,40);//getWidth() / 2 - 40, 20, 80, 80);
     
     filterSlider.setBounds(getWidth() - 150*2*3/4 - 100/2, separatorTop, 100, getHeight() - separatorTop);
     
@@ -90,6 +88,9 @@ void TFGAudioProcessorEditor::resized() {
     mainPanSlider.setBounds((getWidth() - 300)/2 - rotarySliderWidth/2 - 100, mainSelectorRectangle.getY() + 200, rotarySliderWidth - 6, (getHeight() - separatorTop)/3 - 6);
     auxPanSlider.setBounds((getWidth() - 300)/2 - rotarySliderWidth/2 + 100, mainSelectorRectangle.getY() + 200, rotarySliderWidth - 6, (getHeight() - separatorTop)/3 - 6);
     
+    mainHalftimeButton.setBounds(mainSelectorRectangle.getCentreX() - 135 , mainSelectorRectangle.getY() - 60, 120, 30);
+    auxOnOffButton.setBounds(mainSelectorRectangle.getCentreX() + 15, 85, 15, 15);
+    auxHalftimeButton.setBounds(mainSelectorRectangle.getCentreX() + 35 , mainSelectorRectangle.getY() - 60, 120, 30);
 }
 
 //==============================================================================
@@ -98,7 +99,10 @@ void TFGAudioProcessorEditor::sliderValueChanged(Slider *slider) {
     
     if (slider == &gainSlider) audioProcessor.currentDecibels = gainSlider.getValue();
     
-    else if (slider == &mainSelectorSlider) audioProcessor.mainSelectorListener(timeDivisionArray[int(mainSelectorSlider.getValue())]);
+    else if (slider == &mainSelectorSlider) {
+        selectedSelectorPosition[currentSelectedIndex] = mainSelectorSlider.getValue();
+        audioProcessor.selectorListener(timeDivisionArray[int(selectedSelectorPosition[currentSelectedIndex])], currentSelectedIndex);
+    }
     
     else if (slider == &mixSlider) audioProcessor.currentDryWetMix = int(mixSlider.getValue());
     
@@ -124,7 +128,7 @@ void TFGAudioProcessorEditor::setUpUI() {
     mixSlider.addListener(this);
     addAndMakeVisible(mixSlider);
     
-    smoothSlider.init(0.0, 100.0, 0.1, "Smooth", "ms");
+    smoothSlider.init(0.0f, 1.0f, 1.0f, "Smooth", "ON/OFF");
     smoothSlider.addListener(this);
     addAndMakeVisible(smoothSlider);
     
@@ -135,10 +139,10 @@ void TFGAudioProcessorEditor::setUpUI() {
     addAndMakeVisible(filterSlider);
     
     
-    pluginOnOffButton.setToggleState(true, dontSendNotification);
-    pluginOnOffButton.onClick = [this] { audioProcessor.pluginOnOffButtonCallback(pluginOnOffButton.getToggleStateValue().getValue()); };
-    pluginOnOffButton.setLookAndFeel(&lookAndFeelPowerButton);
-    //addAndMakeVisible(pluginOnOffButton);
+    auxOnOffButton.setToggleState(true, dontSendNotification);
+    auxOnOffButton.onClick = [this] { audioProcessor.auxOnOffButtonCallback(auxOnOffButton.getToggleStateValue().getValue()); };
+    auxOnOffButton.setLookAndFeel(&lookAndFeelPowerButton);
+    addAndMakeVisible(auxOnOffButton);
     
     //Halftime controls
     tabMixSlider.init(0.0, 100.0, 1.0, "Tab Mix", "%");
@@ -154,5 +158,25 @@ void TFGAudioProcessorEditor::setUpUI() {
     auxPanSlider.setValue(0.0);
     auxPanSlider.addListener(this);
     addAndMakeVisible(auxPanSlider);
+    
+    mainHalftimeButton.setRadioGroupId(1);
+    mainHalftimeButton.setColour(TextButton::ColourIds::buttonColourId, Colours::darkgrey);
+    mainHalftimeButton.setToggleState(true, dontSendNotification);
+    mainHalftimeButton.setClickingTogglesState(true);
+    mainHalftimeButton.onClick = [this] {
+        currentSelectedIndex = 0;
+        //Cada vez que cambiamos de tab, debemos recuperar la posicion previa que tenia esa TAB
+        mainSelectorSlider.setValue(selectedSelectorPosition[currentSelectedIndex]);
+    };
+    addAndMakeVisible(mainHalftimeButton);
+    
+    auxHalftimeButton.setRadioGroupId(1);
+    auxHalftimeButton.setColour(TextButton::ColourIds::buttonColourId, Colours::darkgrey);
+    auxHalftimeButton.setClickingTogglesState(true);
+    auxHalftimeButton.onClick = [this] {
+        currentSelectedIndex = 1;
+        mainSelectorSlider.setValue(selectedSelectorPosition[currentSelectedIndex]);
+    };
+    addAndMakeVisible(auxHalftimeButton);
     
 }

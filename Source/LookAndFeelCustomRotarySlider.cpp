@@ -30,13 +30,29 @@ void LookAndFeelCustomRotarySlider::drawRotarySlider(Graphics& g, int x, int y, 
     g.setColour(Colours::darkgrey);
     g.strokePath(valueArc2, PathStrokeType (lineW, PathStrokeType::beveled, PathStrokeType::rounded));
     
-    //Arco exterior
-    Path valueArc;
-    valueArc.addCentredArc(bounds.getCentreX(), bounds.getCentreY() + 3, arcRadius, arcRadius, 0.0f, rotaryStartAngle, toAngle, true);
-    g.setColour(fillColour);
+    if (slider.getMinimum() < 0) {
+        auto radian = MathConstants<float>::twoPi - rotaryStartAngle;
+        if (slider.getValue() < 0) {
+            Path valueArcMinus;
+            valueArcMinus.addCentredArc (bounds.getCentreX(), bounds.getCentreY() + 3, arcRadius, arcRadius, 0.0f, 0.0f, jmap (sliderPos, 0.5f, 0.0f, 0.0f, -radian), true);
+            g.setColour (fillColour);
+            g.strokePath (valueArcMinus, PathStrokeType (lineW, PathStrokeType::beveled, PathStrokeType::rounded));
+        }
+        else {
+            Path valueArcPlus;
+            valueArcPlus.addCentredArc (bounds.getCentreX(), bounds.getCentreY() + 3, arcRadius, arcRadius, 0.0f, 0.0f, jmap (sliderPos, 0.5f, 1.0f, 0.0f, radian + 0.02f), true);
+            g.setColour (fillColour);
+            g.strokePath (valueArcPlus, PathStrokeType (lineW, PathStrokeType::beveled, PathStrokeType::rounded));
+        }
+    }
+    else {
+        //Arco exterior
+        Path valueArc;
+        valueArc.addCentredArc(bounds.getCentreX(), bounds.getCentreY() + 3, arcRadius, arcRadius, 0.0f, rotaryStartAngle, toAngle, true);
+        g.setColour(fillColour);
+        g.strokePath(valueArc, PathStrokeType (lineW, PathStrokeType::beveled, PathStrokeType::rounded));
+    }
     
-    //Pintar arco normal
-    g.strokePath(valueArc, PathStrokeType (lineW, PathStrokeType::beveled, PathStrokeType::rounded));
     
     //Borde central
     g.setColour(Colours::black);

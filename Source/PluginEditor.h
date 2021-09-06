@@ -36,7 +36,7 @@ private:
     
     //==============================================================================
     void setUpUI();
-    ToggleButton pluginOnOffButton;
+    ToggleButton auxOnOffButton;
         
     CustomRotarySlider gainSlider, mixSlider, smoothSlider;
     MainSelectorSlider mainSelectorSlider;
@@ -52,5 +52,10 @@ private:
     const double timeDivisionArray[9] = { 0.0625, 1/8, 0.125, 0.25, 0.5, 1, 2, 4, 8 };
   
     CustomRotarySlider tabMixSlider, mainPanSlider, auxPanSlider;
-    ToggleButton mainHalftimeButton, extraHalftimeButton;
+    TextButton mainHalftimeButton {"MAIN TAB"}, auxHalftimeButton {"AUX TAB"};
+    
+    //Esta variable va a almacenar la TAB seleccionada (Main o Aux), de manera que podamos cambiar el intervalo
+    //en ambas iteraciones de halftime. Por defecto, estara seleccionada la Tab Main
+    int currentSelectedIndex = 0;
+    int selectedSelectorPosition[2] = { 5, 5 };
 };
