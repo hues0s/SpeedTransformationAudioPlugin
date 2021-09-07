@@ -103,14 +103,12 @@ void TFGAudioProcessorEditor::resized() {
 void TFGAudioProcessorEditor::sliderValueChanged(Slider *slider) {
     
     if (slider == &gainSlider) audioProcessor.currentDecibels = gainSlider.getValue();
-    
     else if (slider == &mainSelectorSlider) {
         selectedSelectorPosition[currentSelectedIndex] = mainSelectorSlider.getValue();
         audioProcessor.selectorListener(timeDivisionArray[int(selectedSelectorPosition[currentSelectedIndex])], currentSelectedIndex);
     }
-    
     else if (slider == &mixSlider) audioProcessor.currentDryWetMix = int(mixSlider.getValue());
-    
+    else if (slider == &smoothSlider) audioProcessor.hasToSmooth = bool(smoothSlider.getValue());
     else if (slider == &mainPanSlider) audioProcessor.currentMainPan = mainPanSlider.getValue();
     else if (slider == &auxPanSlider) audioProcessor.currentAuxPan = auxPanSlider.getValue();
     else if (slider == &tabMixSlider) audioProcessor.currentDryWetTabMix = int(tabMixSlider.getValue());

@@ -69,8 +69,8 @@ public:
     
     ChainSettings getChainSettings (AudioProcessorValueTreeState& apvts);
     
-    
     void selectorListener(double changedTimeDivision, int index);
+    bool hasToSmooth = true;
     
 private:
     

@@ -323,14 +323,14 @@ void TFGAudioProcessor::halfspeed(AudioBuffer<float>& audioBuffer, std::vector<f
         }
     }
     
-    if (hasToFadeOut){
+    if (hasToFadeOut && hasToSmooth){
         //Hemos acabado de leer todo y hacemos fade out para quitar clipping
         audioBuffer.applyGainRamp(numChannel, 0, numSamples/2, 1.0f, 0.0f);
         audioBuffer.applyGain(numChannel, numSamples/2, numSamples/2, 0.0f);
         if(hasToFadeIn == 0) hasToFadeIn = 2;
     }
     
-    else if(hasToFadeIn > 0){
+    else if(hasToFadeIn > 0 && hasToSmooth){
         audioBuffer.applyGain(numChannel, 0, numSamples/2, 0.0f);
         audioBuffer.applyGainRamp(numChannel, numSamples/2, numSamples/2, 0.0f, 1.0f);
         --hasToFadeIn;
