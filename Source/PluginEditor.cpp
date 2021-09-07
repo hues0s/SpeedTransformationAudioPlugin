@@ -125,7 +125,7 @@ void TFGAudioProcessorEditor::setUpUI() {
     addAndMakeVisible(mainSelectorSlider);
     
     //Creamos el gain slider y configuramos su aspecto visual.
-    gainSlider.init(-60, 0, 0.1, "Gain", "db");
+    gainSlider.init(-60, 0, 0.1, "Gain", "dB");
     gainSlider.addListener(this);
     addAndMakeVisible(gainSlider); //Añadimos el componente gainSlider a este componente principal, y lo hacemos visible.
     

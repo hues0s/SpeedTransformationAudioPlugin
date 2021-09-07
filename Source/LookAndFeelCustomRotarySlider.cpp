@@ -30,7 +30,7 @@ void LookAndFeelCustomRotarySlider::drawRotarySlider(Graphics& g, int x, int y, 
     g.setColour(Colours::darkgrey);
     g.strokePath(valueArc2, PathStrokeType (lineW, PathStrokeType::beveled, PathStrokeType::rounded));
     
-    if (slider.getMinimum() < 0) {
+    if (slider.getMinimum() < 0 && slider.getComponentID() != "dB") {
         auto radian = MathConstants<float>::twoPi - rotaryStartAngle;
         if (slider.getValue() < 0) {
             Path valueArcMinus;
@@ -90,11 +90,16 @@ void LookAndFeelCustomRotarySlider::drawRotarySlider(Graphics& g, int x, int y, 
     g.setColour(Colour::fromRGBA(210, 210, 210, 255));
     f.setHeight(15);
     g.setFont(f);
-    
     std::stringstream stream;
-    stream << std::fixed << std::setprecision(1) << slider.getValue() << " " << slider.getComponentID();
-    g.drawText(stream.str(), bounds.getCentreX() - bounds.getWidth()/2, height/2 + 38, bounds.getWidth(), 20, Justification::centred);
     
+    if (slider.getComponentID() == "ON/OFF") {
+        if(slider.getValue() == 1) g.drawText("ON", bounds.getCentreX() - bounds.getWidth()/2, height/2 + 38, bounds.getWidth(), 20, Justification::centred);
+        else g.drawText("OFF", bounds.getCentreX() - bounds.getWidth()/2, height/2 + 38, bounds.getWidth(), 20, Justification::centred);
+    }
+    else {
+        stream << std::fixed << std::setprecision(1) << slider.getValue() << " " << slider.getComponentID();
+        g.drawText(stream.str(), bounds.getCentreX() - bounds.getWidth()/2, height/2 + 38, bounds.getWidth(), 20, Justification::centred);
+    }
     //Nombre del slider
     g.setColour(Colours::white);
     f.setHeight(17);
