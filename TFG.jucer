@@ -7,14 +7,9 @@
     <GROUP id="{63D8C37B-A676-E4C4-C0A6-68BC2745AAC5}" name="Source">
       <GROUP id="{B98AF577-0F78-6E4F-D140-CD1AA5363C6A}" name="Values">
         <GROUP id="{3C75EE6E-B135-57BA-E998-83A43ECA04EE}" name="Images">
-          <FILE id="sjQDJ9" name="mainIcon.png" compile="0" resource="1" file="Source/mainIcon.png"/>
           <FILE id="E7BVmz" name="ucmIcon.png" compile="0" resource="1" file="Source/ucmIcon.png"/>
         </GROUP>
         <GROUP id="{1F252BEA-1979-D323-867D-3F2A59763B71}" name="Fonts">
-          <FILE id="skCp1v" name="BebasNeue-Regular.ttf" compile="0" resource="1"
-                file="Source/BebasNeue-Regular.ttf"/>
-          <FILE id="U5eoTg" name="CORPOREA.TTF" compile="0" resource="1" file="Source/CORPOREA.TTF"/>
-          <FILE id="ulrXHb" name="Matrouh.otf" compile="0" resource="1" file="Source/Matrouh.otf"/>
           <FILE id="R5i51L" name="TambaSans-Bold.otf" compile="0" resource="1"
                 file="Source/TambaSans-Bold.otf"/>
         </GROUP>

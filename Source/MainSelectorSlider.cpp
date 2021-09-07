@@ -17,11 +17,10 @@ MainSelectorSlider::MainSelectorSlider() {
     setTextBoxStyle(juce::Slider::NoTextBox, true, 50, 20);
     setColour(Slider::rotarySliderFillColourId, ProjectColours::mainColour);
     setLookAndFeel(&customLookAndFeel);
-    //setRotaryParameters(4.1f, 8.5f, true);
     setRotaryParameters(5.3f, 10.42f - (10.4f - 5.28f)/9, true);
 
-    setRange(0, 8, 1);
-    setValue(5);
+    setRange(0, 7, 1);
+    setValue(4);
     
 }
 

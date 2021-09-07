@@ -49,7 +49,7 @@ private:
     
     LookAndFeelPowerButton lookAndFeelPowerButton;
     
-    const double timeDivisionArray[9] = { 0.0625, 1/8, 0.125, 0.25, 0.5, 1, 2, 4, 8 };
+    const double timeDivisionArray[8] = { 0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8 };
   
     CustomRotarySlider tabMixSlider, mainPanSlider, auxPanSlider;
     TextButton mainHalftimeButton {"MAIN TAB"}, auxHalftimeButton {"AUX TAB"};
@@ -57,5 +57,5 @@ private:
     //Esta variable va a almacenar la TAB seleccionada (Main o Aux), de manera que podamos cambiar el intervalo
     //en ambas iteraciones de halftime. Por defecto, estara seleccionada la Tab Main
     int currentSelectedIndex = 0;
-    int selectedSelectorPosition[2] = { 5, 5 };
+    int selectedSelectorPosition[2] = { 4, 4 };
 };
