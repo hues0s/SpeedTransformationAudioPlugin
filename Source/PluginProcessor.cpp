@@ -103,7 +103,7 @@ bool TFGAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) cons
 void TFGAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock) {
     
     currentSampleRate = sampleRate;
-    
+        
     //Configuración de los filtros de paso bajo y paso alto
     dsp::ProcessSpec spec;
     spec.maximumBlockSize = samplesPerBlock;
@@ -120,6 +120,7 @@ void TFGAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock) {
     spec2.sampleRate = sampleRate;
     dryWetMixer.prepare(spec2);
     dryWetTabMixer.prepare(spec2);
+    
 }
 
 void TFGAudioProcessor::releaseResources() { }
@@ -137,7 +138,8 @@ void TFGAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& mi
     if (playHead != nullptr) {
         playHead->getCurrentPosition(cpi);
     }
-        
+    
+    
     if(cpi.isPlaying) { //Audio en reproducción
         
         //Calculamos si hay que esperar, y cuantos bloques deberia esperar
@@ -145,8 +147,8 @@ void TFGAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& mi
         //y debemos esperar al siguiente punto para empezar a realizar el efecto.
         //La espera dependerá del intervalo maximo escogido en el MAIN o en el AUX.
         calculateRemainingWaitingCycles(std::max(selectedTimeDivision[0], selectedTimeDivision[1]));
-        
-        if(remainingWaitingCycles >= 0) {
+        DBG("remainingcycles: " + std::to_string(remainingWaitingCycles));
+        if(remainingWaitingCycles > 0) {
             muteAudio(buffer, totalNumInputChannels, currentNumSamples);
             --remainingWaitingCycles;
         }
@@ -156,7 +158,7 @@ void TFGAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& mi
             //En caso de que tengamos mas canales de salida que canales de entrada, esta funcion limpia los canales
             //de salida que no contengan datos de entrada, para evitar que se produzca ruido de salida.
             clearChannels(buffer, totalNumInputChannels, totalNumOutputChannels, buffer.getNumSamples());
-
+            
             //A continuación, establezco el porcentaje de señal DRY/WET y
             //envio el buffer DRY (sin aplicar efecto) al mixer, para que mas tarde pueda mezclarlo con la señal WET
             dryWetMixer.setWetMixProportion(currentDryWetMix/100.0f);
@@ -170,9 +172,9 @@ void TFGAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& mi
                 //Gestionamos el Halftime AUX
                 int amountOfNeededSamplesAux = ((60 * 4 * selectedTimeDivision[1] / cpi.bpm ) * currentSampleRate) / 2;
                 //Canal L
-                halfspeed(auxBuffer, buffer0Aux, 0, currentNumSamples, writeBufferPosition0Aux, readBufferPosition0Aux, amountOfNeededSamplesAux, hasToFadeInAux);
+                halfspeed(auxBuffer, buffer0Aux, 0, currentNumSamples, writeBufferPosition0Aux, readBufferPosition0Aux, amountOfNeededSamplesAux);
                 //Canal R
-                halfspeed(auxBuffer, buffer1Aux, 1, currentNumSamples, writeBufferPosition1Aux, readBufferPosition1Aux, amountOfNeededSamplesAux, hasToFadeInAux);
+                halfspeed(auxBuffer, buffer1Aux, 1, currentNumSamples, writeBufferPosition1Aux, readBufferPosition1Aux, amountOfNeededSamplesAux);
                 
                 
                 //Gestionamos el Pan del halftime AUX
@@ -184,10 +186,11 @@ void TFGAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& mi
             //Gestionamos el efecto de halfspeed PRINCIPAL
             //Samples a acumular en cada ciclo de halfspeed
             int amountOfNeededSamplesMain = ((60 * 4 * selectedTimeDivision[0] / cpi.bpm ) * currentSampleRate) / 2;
+
             //Canal L
-            halfspeed(buffer, buffer0Main, 0, currentNumSamples, writeBufferPosition0Main, readBufferPosition0Main, amountOfNeededSamplesMain, hasToFadeInMain);
+            halfspeed(buffer, buffer0Main, 0, currentNumSamples, writeBufferPosition0Main, readBufferPosition0Main, amountOfNeededSamplesMain);
             //Canal R
-            halfspeed(buffer, buffer1Main, 1, currentNumSamples, writeBufferPosition1Main, readBufferPosition1Main, amountOfNeededSamplesMain, hasToFadeInMain);
+            halfspeed(buffer, buffer1Main, 1, currentNumSamples, writeBufferPosition1Main, readBufferPosition1Main, amountOfNeededSamplesMain);
             
             //Gestionamos el control de Pan del halftime MAIN
             handlePan(buffer, totalNumInputChannels, currentNumSamples, currentMainPan);
@@ -270,9 +273,12 @@ void TFGAudioProcessor::resetHalfspeed() {
     hasCalculatedWaitingCycles = false;
 }
 
-void TFGAudioProcessor::halfspeed(AudioBuffer<float>& audioBuffer, std::vector<float>& writeBuffer, int numChannel, int numSamples, unsigned& writeBufferPosition, unsigned& readBufferPosition, int& amountOfNeededSamples, int& hasToFadeIn) {
+void TFGAudioProcessor::halfspeed(AudioBuffer<float>& audioBuffer, std::vector<float>& writeBuffer, int numChannel, int numSamples, unsigned& writeBufferPosition, unsigned& readBufferPosition, int& amountOfNeededSamples) {
     
-    bool hasToFadeOut = false;
+    unsigned currentFadeLength =
+        (currentSmoothMs * currentSampleRate) / 1000 // currentSampleRate equivale a las muestras por segundo = 1000ms
+        / 2; //Dividimos /2 porque el fade se va a realizar antes que la duplicacion de samples
+   
     
     //Escribimos en el write buffer el bloque de audio entrante
     if (writeBufferPosition < amountOfNeededSamples) {
@@ -295,10 +301,21 @@ void TFGAudioProcessor::halfspeed(AudioBuffer<float>& audioBuffer, std::vector<f
     while (remaining >= 2) {
         remaining -= 2; //Por cada sample que leemos del writeBuffer, escribimos 2 samples en el buffer de salida
         
+        //Fade IN y Fade OUT
+        float fadeFactor = 1;
+        if (amountOfNeededSamples - readBufferPosition <= currentFadeLength) {
+            fadeFactor = (amountOfNeededSamples - readBufferPosition);
+            fadeFactor /= currentFadeLength;
+        }
+        if (readBufferPosition <= currentFadeLength) {
+            fadeFactor = readBufferPosition;
+            fadeFactor /= currentFadeLength;
+        }
+         
         //Leemos del writeBuffer y realizamos la interpolacion
-        *writePointer = (writeBuffer[readBufferPosition] - last)/2;
+        *writePointer = (writeBuffer[readBufferPosition] - last)/2 * fadeFactor;
         writePointer++;
-        *writePointer = writeBuffer[readBufferPosition];
+        *writePointer = writeBuffer[readBufferPosition] * fadeFactor;
         writePointer++;
         last = writeBuffer[readBufferPosition];
         
@@ -310,9 +327,7 @@ void TFGAudioProcessor::halfspeed(AudioBuffer<float>& audioBuffer, std::vector<f
             writeBuffer.clear();
             writeBufferPosition = 0;
             readBufferPosition = 0;
-            
-            hasToFadeOut = true;
-            
+                        
             // Si quedan datos sin sobrescribir que pertenecen al siquiente beat, los guardamos para terminar de leerlos.
             if (remaining) {
                 int copy_amount = remaining > amountOfNeededSamples ? amountOfNeededSamples : remaining;
@@ -321,19 +336,6 @@ void TFGAudioProcessor::halfspeed(AudioBuffer<float>& audioBuffer, std::vector<f
                 writeBufferPosition += remaining;
             }
         }
-    }
-    
-    if (hasToFadeOut && hasToSmooth){
-        //Hemos acabado de leer todo y hacemos fade out para quitar clipping
-        audioBuffer.applyGainRamp(numChannel, 0, numSamples/2, 1.0f, 0.0f);
-        audioBuffer.applyGain(numChannel, numSamples/2, numSamples/2, 0.0f);
-        if(hasToFadeIn == 0) hasToFadeIn = 2;
-    }
-    
-    else if(hasToFadeIn > 0 && hasToSmooth){
-        audioBuffer.applyGain(numChannel, 0, numSamples/2, 0.0f);
-        audioBuffer.applyGainRamp(numChannel, numSamples/2, numSamples/2, 0.0f, 1.0f);
-        --hasToFadeIn;
     }
     
 }

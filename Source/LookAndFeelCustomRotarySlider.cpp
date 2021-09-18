@@ -92,14 +92,9 @@ void LookAndFeelCustomRotarySlider::drawRotarySlider(Graphics& g, int x, int y, 
     g.setFont(f);
     std::stringstream stream;
     
-    if (slider.getComponentID() == "ON/OFF") {
-        if(slider.getValue() == 1) g.drawText("ON", bounds.getCentreX() - bounds.getWidth()/2, height/2 + 38, bounds.getWidth(), 20, Justification::centred);
-        else g.drawText("OFF", bounds.getCentreX() - bounds.getWidth()/2, height/2 + 38, bounds.getWidth(), 20, Justification::centred);
-    }
-    else {
-        stream << std::fixed << std::setprecision(1) << slider.getValue() << " " << slider.getComponentID();
-        g.drawText(stream.str(), bounds.getCentreX() - bounds.getWidth()/2, height/2 + 38, bounds.getWidth(), 20, Justification::centred);
-    }
+    stream << std::fixed << std::setprecision(1) << slider.getValue() << " " << slider.getComponentID();
+    g.drawText(stream.str(), bounds.getCentreX() - bounds.getWidth()/2, height/2 + 38, bounds.getWidth(), 20, Justification::centred);
+    
     //Nombre del slider
     g.setColour(Colours::white);
     f.setHeight(17);

@@ -56,6 +56,7 @@ public:
     float currentMainPan { 0.0 };
     float currentAuxPan { 0.0 };
     int currentDryWetTabMix { 100 };
+    int currentSmoothMs { 30 };
     
     bool isAuxOn = true;
     void auxOnOffButtonCallback(bool isAuxOn);
@@ -70,7 +71,6 @@ public:
     ChainSettings getChainSettings (AudioProcessorValueTreeState& apvts);
     
     void selectorListener(double changedTimeDivision, int index);
-    bool hasToSmooth = true;
     
 private:
     
@@ -92,7 +92,7 @@ private:
     void clearChannels(AudioBuffer<float>& buffer, int totalNumInputChannels, int totalNumOutputChannels, int numSamplesPerChannel);
     
     //Gestion principal del efecto
-    void halfspeed(AudioBuffer<float>& audioBuffer, std::vector<float>& writeBuffer, int numChannel, int numSamples, unsigned& writeBufferPosition, unsigned& readBufferPosition, int& amountOfNeededSamples, int& hasToFadeIn);
+    void halfspeed(AudioBuffer<float>& audioBuffer, std::vector<float>& writeBuffer, int numChannel, int numSamples, unsigned& writeBufferPosition, unsigned& readBufferPosition, int& amountOfNeededSamples);
     void resetHalfspeed();
     void muteAudio(AudioBuffer<float> & buffer, int numChannels, int numSamples);
     
@@ -126,10 +126,6 @@ private:
     
     dsp::DryWetMixer<float> dryWetMixer;    //Esta clase facilita la mezcla de dos señales de audio
                                             //La utilizamos para combinar las señales DRY y WET
-    
-    int hasToFadeInMain = 0;    //Inicializamos a true para que tambien haga FADE IN en el primer intervalo
-                                //Lo inicializamos como numero en vez de bool para que pueda afectar a los dos canales L y R
-    int hasToFadeInAux = 0;
     
     dsp::DryWetMixer<float> dryWetTabMixer;
     

@@ -108,7 +108,7 @@ void TFGAudioProcessorEditor::sliderValueChanged(Slider *slider) {
         audioProcessor.selectorListener(timeDivisionArray[int(selectedSelectorPosition[currentSelectedIndex])], currentSelectedIndex);
     }
     else if (slider == &mixSlider) audioProcessor.currentDryWetMix = int(mixSlider.getValue());
-    else if (slider == &smoothSlider) audioProcessor.hasToSmooth = bool(smoothSlider.getValue());
+    else if (slider == &smoothSlider) audioProcessor.currentSmoothMs = int(smoothSlider.getValue());
     else if (slider == &mainPanSlider) audioProcessor.currentMainPan = mainPanSlider.getValue();
     else if (slider == &auxPanSlider) audioProcessor.currentAuxPan = auxPanSlider.getValue();
     else if (slider == &tabMixSlider) audioProcessor.currentDryWetTabMix = int(tabMixSlider.getValue());
@@ -131,7 +131,7 @@ void TFGAudioProcessorEditor::setUpUI() {
     mixSlider.addListener(this);
     addAndMakeVisible(mixSlider);
     
-    smoothSlider.init(0.0f, 1.0f, 1.0f, "Smooth", "ON/OFF");
+    smoothSlider.init(0, 30, 1, "Smooth", "ms");
     smoothSlider.addListener(this);
     addAndMakeVisible(smoothSlider);
     
