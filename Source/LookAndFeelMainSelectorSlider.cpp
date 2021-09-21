@@ -61,7 +61,7 @@ void LookAndFeelMainSelectorSlider::drawRotarySlider(Graphics& g, int x, int y, 
     }
     
     //Texto
-    Font f = Font(Typeface::createSystemTypefaceFor(BinaryData::TambaSansBold_otf, BinaryData::TambaSansBold_otfSize));
+    Font f = Font(Typeface::createSystemTypefaceFor(BinaryData::PluginFont_otf, BinaryData::PluginFont_otfSize));
     g.setColour(Colour::fromRGBA(210, 210, 210, 255));
     f.setHeight(35);
     g.setFont(f);

@@ -11,6 +11,7 @@
 #include "PluginEditor.h"
 #include <cmath>
 
+
 TFGAudioProcessor::TFGAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
@@ -301,14 +302,15 @@ void TFGAudioProcessor::halfspeed(AudioBuffer<float>& audioBuffer, std::vector<f
     while (remaining >= 2) {
         remaining -= 2; //Por cada sample que leemos del writeBuffer, escribimos 2 samples en el buffer de salida
         
-        //Fade IN y Fade OUT
         float fadeFactor = 1;
-        if (amountOfNeededSamples - readBufferPosition <= currentFadeLength) {
-            fadeFactor = (amountOfNeededSamples - readBufferPosition);
-            fadeFactor /= currentFadeLength;
-        }
+        //Fade IN
         if (readBufferPosition <= currentFadeLength) {
             fadeFactor = readBufferPosition;
+            fadeFactor /= currentFadeLength;
+        }
+        //Fade OUT
+        if (amountOfNeededSamples - readBufferPosition <= currentFadeLength) {
+            fadeFactor = (amountOfNeededSamples - readBufferPosition);
             fadeFactor /= currentFadeLength;
         }
          

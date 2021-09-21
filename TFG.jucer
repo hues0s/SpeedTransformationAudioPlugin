@@ -10,16 +10,12 @@
           <FILE id="E7BVmz" name="ucmIcon.png" compile="0" resource="1" file="Source/ucmIcon.png"/>
         </GROUP>
         <GROUP id="{1F252BEA-1979-D323-867D-3F2A59763B71}" name="Fonts">
-          <FILE id="R5i51L" name="TambaSans-Bold.otf" compile="0" resource="1"
-                file="Source/TambaSans-Bold.otf"/>
+          <FILE id="rsjQsY" name="PluginFont.otf" compile="0" resource="1" file="Source/PluginFont.otf"/>
         </GROUP>
         <FILE id="WEXydO" name="ProjectColours.cpp" compile="1" resource="0"
               file="Source/ProjectColours.cpp"/>
         <FILE id="JUyFvi" name="ProjectColours.h" compile="0" resource="0"
               file="Source/ProjectColours.h"/>
-        <FILE id="dvmqJc" name="ProjectFonts.cpp" compile="1" resource="0"
-              file="Source/ProjectFonts.cpp"/>
-        <FILE id="ceJZIR" name="ProjectFonts.h" compile="0" resource="0" file="Source/ProjectFonts.h"/>
       </GROUP>
       <GROUP id="{3EC8638F-B452-5027-E639-157352336948}" name="CustomComponents">
         <FILE id="LcNkLX" name="MainSelectorSlider.cpp" compile="1" resource="0"

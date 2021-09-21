@@ -84,7 +84,7 @@ void LookAndFeelCustomRotarySlider::drawRotarySlider(Graphics& g, int x, int y, 
     g.fillPath(thumb2, AffineTransform::rotation (toAngle + 3.12f).translated(bounds.getCentre()));
     
     
-    Font f = Font(Typeface::createSystemTypefaceFor(BinaryData::TambaSansBold_otf, BinaryData::TambaSansBold_otfSize));
+    Font f = Font(Typeface::createSystemTypefaceFor(BinaryData::PluginFont_otf, BinaryData::PluginFont_otfSize));
     
     //Valor del slider
     g.setColour(Colour::fromRGBA(210, 210, 210, 255));

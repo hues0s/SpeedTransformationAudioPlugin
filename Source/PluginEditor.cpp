@@ -11,6 +11,7 @@
 #include "PluginEditor.h"
 #include "ProjectColours.h"
 
+
 TFGAudioProcessorEditor::TFGAudioProcessorEditor(TFGAudioProcessor& p) : AudioProcessorEditor(&p), audioProcessor(p), twoValueSliderAttachment(audioProcessor.apvts, "Low Cut Frequency", "High Cut Frequency", filterSlider) {
         setUpUI();
 }
@@ -56,7 +57,7 @@ void TFGAudioProcessorEditor::paint (Graphics& g) {
     g.strokePath(line, PathStrokeType (0.8f, PathStrokeType::mitered, PathStrokeType::butt));
     line.clear();
     
-    Font f = Font(Typeface::createSystemTypefaceFor(BinaryData::TambaSansBold_otf, BinaryData::TambaSansBold_otfSize));
+    Font f = Font(Typeface::createSystemTypefaceFor(BinaryData::PluginFont_otf, BinaryData::PluginFont_otfSize));
     f.setHeight(38);
     g.setFont(f);
     g.setColour(Colour::fromRGBA(241,241,237,255));
@@ -65,7 +66,7 @@ void TFGAudioProcessorEditor::paint (Graphics& g) {
     Image ucmIcon = ImageCache::getFromMemory(BinaryData::ucmIcon_png, BinaryData::ucmIcon_pngSize);
     g.drawImage(ucmIcon, Rectangle<float>(getWidth() - 115, separatorTop/2 - 16.5, 70.34, 33), true);
     
-    Font f2 = Font(Typeface::createSystemTypefaceFor(BinaryData::TambaSansBold_otf, BinaryData::TambaSansBold_otfSize));
+    Font f2 = Font(Typeface::createSystemTypefaceFor(BinaryData::PluginFont_otf, BinaryData::PluginFont_otfSize));
     f2.setHeight(10);
     g.setFont(f2);
     g.setColour(Colour::fromRGBA(241,241,237,255));
