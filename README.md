@@ -1,4 +1,4 @@
-# Trabajo de Fin de Grado
+# Bachelor's Degree Final Project • TFG
 A speed transformation audio effect plugin for digital audio workstations, implemented using [JUCE Framework](https://github.com/juce-framework/JUCE).
 
 ## Features
